@@ -1,0 +1,41 @@
+{
+  "$schema": "./node_modules/@forgekit/storybook-mcp/config-schema.json",
+  "framework": "chakra",
+  "libraries": [
+    {
+      "name": "ui",
+      "path": "libs/ui/src",
+      "storyTitlePrefix": "UI / Components",
+      "importAlias": "@ui"
+    },
+    {
+      "name": "shared",
+      "path": "libs/shared/src",
+      "storyTitlePrefix": "Shared",
+      "decorators": ["withChakraProvider"]
+    },
+    {
+      "name": "features",
+      "path": "libs/features/src",
+      "storyTitlePrefix": "Features",
+      "decorators": ["withRouter", "withQueryClient"]
+    }
+  ],
+  "storyFilePattern": "**/*.stories.{ts,tsx}",
+  "componentPatterns": [
+    "**/src/**/*.tsx",
+    "**/lib/**/*.tsx",
+    "!**/*.stories.tsx",
+    "!**/*.test.tsx",
+    "!**/*.spec.tsx",
+    "!**/index.tsx"
+  ],
+  "excludePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.storybook/**",
+    "**/coverage/**"
+  ],
+  "storybookVersion": 8
+}
