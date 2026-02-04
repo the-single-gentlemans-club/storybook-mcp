@@ -36,6 +36,16 @@ export function validateLicense(config: StorybookMCPConfig): LicenseStatus {
     }
   }
 
+  // Developer / Team Bypass Key
+  // You can give this key to your team members
+  if (key === 'FORGE-DEV-BYPASS-2026') {
+    return {
+      isValid: true,
+      tier: 'pro',
+      maxSyncLimit: Infinity
+    }
+  }
+
   // Simple validation for now (can be anything non-empty that looks like a key)
   // In production, this would be a proper format check or API call
   const isValid = key.length > 8
