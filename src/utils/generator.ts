@@ -11,7 +11,7 @@ import type {
   StoryGenerationOptions,
   GeneratedStory,
   PropDefinition,
-} from './types.js'
+} from '../types.js'
 import { toKebabCase } from './scanner.js'
 
 /**

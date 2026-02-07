@@ -11,7 +11,7 @@ import type {
   StorybookMCPConfig,
   ComponentInfo,
   ComponentAnalysis,
-} from './types.js'
+} from '../types.js'
 import { scanComponents, analyzeComponent } from './scanner.js'
 import { generateStory, writeStoryFile } from './generator.js'
 import { generateTest, writeTestFile } from './test-generator.js'
@@ -259,7 +259,7 @@ async function syncComponent(
     dryRun: boolean
   }
 ): Promise<SyncResult> {
-  const { generateStories, generateTests, generateDocs, updateExisting, dryRun } = options
+  const { generateStories: shouldGenStories, generateTests: shouldGenTests, generateDocs: shouldGenDocs, updateExisting, dryRun } = options
   
   const componentFullPath = path.join(config.rootDir, component.filePath)
   const componentHash = hashFile(componentFullPath)
@@ -290,7 +290,7 @@ async function syncComponent(
   }
 
   // --- Stories ---
-  if (generateStories) {
+  if (shouldGenStories) {
     const storyPath = getStoryPath(component.filePath)
     const storyExists = fileExists(config.rootDir, storyPath)
 
@@ -334,7 +334,7 @@ async function syncComponent(
   }
 
   // --- Tests ---
-  if (generateTests) {
+  if (shouldGenTests) {
     const testPath = getTestPath(component.filePath)
     const testExists = fileExists(config.rootDir, testPath)
 
@@ -367,7 +367,7 @@ async function syncComponent(
   }
 
   // --- Docs ---
-  if (generateDocs) {
+  if (shouldGenDocs) {
     const docsPath = getDocsPath(component.filePath)
     const docsExists = fileExists(config.rootDir, docsPath)
 

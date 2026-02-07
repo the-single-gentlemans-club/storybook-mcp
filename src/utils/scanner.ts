@@ -12,7 +12,7 @@ import type {
   ComponentAnalysis,
   PropDefinition,
   DependencyInfo,
-} from './types.js'
+} from '../types.js'
 
 /**
  * Scan for all components in configured libraries

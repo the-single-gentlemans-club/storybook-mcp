@@ -9,7 +9,7 @@ import type {
   StorybookMCPConfig,
   ValidationResult,
   ValidationIssue,
-} from './types.js'
+} from '../types.js'
 
 /**
  * Validate a story file

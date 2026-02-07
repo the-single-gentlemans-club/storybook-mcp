@@ -142,7 +142,7 @@ export async function validateStoryTool(
  * Get a template for a specific story type
  */
 export async function getStoryTemplate(
-  _config: StorybookMCPConfig,
+  config: StorybookMCPConfig,
   args: {
     template: string
   }
@@ -173,7 +173,7 @@ export async function getStoryTemplate(
  * Tool: list_templates
  * List all available story templates
  */
-export async function listTemplates(_config: StorybookMCPConfig) {
+export async function listTemplates(config: StorybookMCPConfig) {
   // Check license
   const license = validateLicense(config)
   const isPro = license.tier === 'pro'

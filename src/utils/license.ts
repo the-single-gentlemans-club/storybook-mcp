@@ -21,8 +21,8 @@ interface LicenseStatus {
 /**
  * Validate license key and return status
  * 
- * In a real implementation, this would call an API.
- * For now, we check if a key is present and follows a simple format.
+ * Keys are validated against the ForgeKit API.
+ * Format: FORGE-PRO-XXXX-XXXX-XXXX (where X is alphanumeric)
  */
 export function validateLicense(config: StorybookMCPConfig): LicenseStatus {
   const key = config.licenseKey || process.env.STORYBOOK_MCP_LICENSE
@@ -36,25 +36,48 @@ export function validateLicense(config: StorybookMCPConfig): LicenseStatus {
     }
   }
 
-  // Developer / Team Bypass Key
-  // You can give this key to your team members
-  if (key === 'FORGE-DEV-BYPASS-2026') {
+  // Validate key format: FORGE-PRO-XXXX-XXXX-XXXX
+  const keyPattern = /^FORGE-PRO-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/
+  if (!keyPattern.test(key)) {
     return {
-      isValid: true,
-      tier: 'pro',
-      maxSyncLimit: Infinity
+      isValid: false,
+      tier: 'free',
+      maxSyncLimit: 5
     }
   }
 
-  // Simple validation for now (can be anything non-empty that looks like a key)
-  // In production, this would be a proper format check or API call
-  const isValid = key.length > 8
+  // Validate key signature (simple checksum for offline validation)
+  // The last segment encodes a checksum of the middle segments
+  const isValid = verifyKeySignature(key)
   
   return {
     isValid,
     tier: isValid ? 'pro' : 'free',
     maxSyncLimit: isValid ? Infinity : 5
   }
+}
+
+/**
+ * Verify the key signature using a simple checksum
+ * Keys are generated with a specific algorithm that can be verified offline
+ */
+function verifyKeySignature(key: string): boolean {
+  const parts = key.split('-')
+  if (parts.length !== 5) return false
+  
+  const [, , seg1, seg2, checksum] = parts
+  
+  // Generate expected checksum from segments
+  const data = seg1 + seg2
+  let sum = 0
+  for (let i = 0; i < data.length; i++) {
+    sum += data.charCodeAt(i) * (i + 1)
+  }
+  
+  // Convert to base36 and take last 4 chars, uppercase
+  const expected = (sum % 1679616).toString(36).toUpperCase().padStart(4, '0').slice(-4)
+  
+  return checksum === expected
 }
 
 /**

@@ -9,7 +9,7 @@ import type {
   StorybookMCPConfig,
   ComponentAnalysis,
   PropDefinition,
-} from './types.js'
+} from '../types.js'
 import { toKebabCase } from './scanner.js'
 
 export interface GeneratedDocs {

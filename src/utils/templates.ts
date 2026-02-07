@@ -3,7 +3,7 @@
  * Provides story templates for different use cases
  */
 
-import type { StoryTemplate } from './types.js'
+import type { StoryTemplate } from '../types.js'
 
 /**
  * Get all available templates

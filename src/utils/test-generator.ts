@@ -8,7 +8,7 @@ import path from 'node:path'
 import type {
   StorybookMCPConfig,
   ComponentAnalysis,
-} from './types.js'
+} from '../types.js'
 import { toKebabCase } from './scanner.js'
 
 export interface GeneratedTest {

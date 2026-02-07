@@ -9,3 +9,6 @@ pnpm-debug.log
 .idea
 .vscode
 *.tsbuildinfo
+
+# Private scripts (license generation, etc.)
+scripts/
