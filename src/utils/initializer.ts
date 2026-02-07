@@ -251,7 +251,7 @@ export async function initializeComponents(
   }
   if (limitApplied && maxComponents) {
     console.error(`\n⚠️  Free tier limit: Only ${maxComponents} components processed.`)
-    console.error(`   Upgrade to Pro for unlimited: https://forgekit.lemonsqueezy.com/checkout/buy/69feb0fb-a059-4e37-9e22-fafa1d168348`)
+    console.error(`   Upgrade to Pro for unlimited: coming soon - email hello@forgekit.dev`)
   }
 
   return result

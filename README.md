@@ -70,7 +70,7 @@ For professional teams requiring complete coverage.
 - ✅ Priority support
 - ✅ Lifetime updates — no subscription
 
-**[👉 Get Pro License](https://forgekit.lemonsqueezy.com/checkout/buy/69feb0fb-a059-4e37-9e22-fafa1d168348)**
+**[👉 Get Pro License](coming soon - email hello@forgekit.dev)**
 
 ### Activation
 

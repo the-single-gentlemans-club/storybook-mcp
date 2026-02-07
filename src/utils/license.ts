@@ -215,7 +215,7 @@ export function requireFeature(feature: Feature, status: LicenseStatus): void {
     throw new Error(
       `Feature '${feature}' requires a Pro license.\n` +
       `Please add a valid license key to your config or environment variable STORYBOOK_MCP_LICENSE.\n` +
-      `Get your license at: https://forgekit.lemonsqueezy.com/checkout/buy/69feb0fb-a059-4e37-9e22-fafa1d168348`
+      `Get your license at: coming soon - email hello@forgekit.dev`
     )
   }
 }
