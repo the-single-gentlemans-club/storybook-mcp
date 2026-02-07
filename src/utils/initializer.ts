@@ -50,6 +50,8 @@ export interface InitOptions {
   library?: string
   /** Only process components matching this pattern */
   filter?: string
+  /** Max components to process (license limit) */
+  maxComponents?: number
 }
 
 export interface InitResult {
@@ -161,6 +163,7 @@ export async function initializeComponents(
     dryRun = false,
     library,
     filter,
+    maxComponents,
   } = options
 
   const result: InitResult = {
@@ -177,10 +180,17 @@ export async function initializeComponents(
   const newCache: HashCache = { version: '1', components: {} }
 
   // Scan all components
-  const components = await scanComponents(config, { library })
+  let components = await scanComponents(config, { library })
   result.scanned = components.length
 
-  console.error(`[storybook-mcp] Scanning ${components.length} components...`)
+  // Apply license limit
+  let limitApplied = false
+  if (maxComponents && maxComponents < components.length) {
+    components = components.slice(0, maxComponents)
+    limitApplied = true
+  }
+
+  console.error(`[storybook-mcp] Scanning ${components.length} components...${limitApplied ? ` (limited from ${result.scanned})` : ''}`)
 
   for (const component of components) {
     // Apply filter if specified
@@ -238,6 +248,10 @@ export async function initializeComponents(
   console.error(`  Skipped: ${result.skipped}`)
   if (result.errors.length > 0) {
     console.error(`  Errors: ${result.errors.length}`)
+  }
+  if (limitApplied && maxComponents) {
+    console.error(`\n⚠️  Free tier limit: Only ${maxComponents} components processed.`)
+    console.error(`   Upgrade to Pro for unlimited: https://forgekit.lemonsqueezy.com/checkout/buy/69feb0fb-a059-4e37-9e22-fafa1d168348`)
   }
 
   return result

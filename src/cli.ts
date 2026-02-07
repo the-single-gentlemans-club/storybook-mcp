@@ -18,6 +18,7 @@ import { runServer } from './index.js'
 import type { StorybookMCPConfig } from './types.js'
 import { DEFAULT_CONFIG } from './types.js'
 import { initializeComponents } from './utils/initializer.js'
+import { validateLicenseAsync } from './utils/license.js'
 
 // Parse CLI arguments
 function parseArgs(): {
@@ -28,6 +29,7 @@ function parseArgs(): {
   noTests: boolean
   noDocs: boolean
   noUpdate: boolean
+  help: boolean
 } {
   const args = process.argv.slice(2)
   return {
@@ -38,12 +40,60 @@ function parseArgs(): {
     noTests: args.includes('--no-tests'),
     noDocs: args.includes('--no-docs'),
     noUpdate: args.includes('--no-update'),
+    help: args.includes('--help') || args.includes('-h'),
   }
+}
+
+function showHelp(): void {
+  console.log(`
+forgekit-storybook-mcp - Auto-generate Storybook stories, tests, and docs
+
+USAGE:
+  npx forgekit-storybook-mcp [options]
+
+OPTIONS:
+  --init-only     Generate files and exit (no MCP server)
+  --dry-run       Show what would be created without writing files
+  --skip-init     Skip initial component sync
+  --no-stories    Don't generate story files
+  --no-tests      Don't generate test files  
+  --no-docs       Don't generate MDX docs
+  --no-update     Don't update existing files
+  -h, --help      Show this help message
+
+CONFIGURATION:
+  Create storybook-mcp.config.json or add "storybook-mcp" to package.json:
+  
+  {
+    "framework": "chakra|shadcn|tamagui|gluestack|vanilla",
+    "libraries": [
+      { "name": "ui", "path": "libs/ui/src" }
+    ],
+    "licenseKey": "your-license-key"
+  }
+
+  Or set STORYBOOK_MCP_LICENSE environment variable.
+
+LICENSE:
+  Free tier: 5 components, basic stories only
+  Pro ($49): Unlimited components, tests, docs, all templates
+  
+  Get Pro: https://forgekit.lemonsqueezy.com/checkout/buy/69feb0fb-a059-4e37-9e22-fafa1d168348
+
+MORE INFO:
+  https://npmjs.com/package/forgekit-storybook-mcp
+`)
 }
 
 async function main() {
   const cwd = process.cwd()
   const args = parseArgs()
+
+  if (args.help) {
+    showHelp()
+    process.exit(0)
+  }
+
   let config: StorybookMCPConfig
 
   // Try to load config from file
@@ -87,6 +137,10 @@ async function main() {
   console.error(`[storybook-mcp] Framework: ${config.framework}`)
   console.error(`[storybook-mcp] Libraries: ${config.libraries.map(l => l.name).join(', ')}`)
 
+  // Validate license (async with caching)
+  const license = await validateLicenseAsync(config)
+  console.error(`[storybook-mcp] License: ${license.tier}${license.tier === 'free' ? ` (max ${license.maxSyncLimit} components)` : ''}`)
+
   // Run initialization unless skipped
   if (!args.skipInit) {
     console.error(`[storybook-mcp] Running component sync...`)
@@ -97,6 +151,7 @@ async function main() {
       generateDocs: !args.noDocs,
       updateExisting: !args.noUpdate,
       dryRun: args.dryRun,
+      maxComponents: license.tier === 'free' ? license.maxSyncLimit : undefined,
     })
 
     if (args.dryRun) {
