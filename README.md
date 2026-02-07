@@ -2,7 +2,7 @@
 
 A **Model Context Protocol (MCP) server** for Storybook story generation, component analysis, and validation.
 
-**Framework-agnostic** — works with Chakra UI, shadcn/ui, Tamagui, Gluestack UI, React Native, or vanilla React.
+**Framework-agnostic** - works with Chakra UI, shadcn/ui, Tamagui, Gluestack UI, React Native, or vanilla React.
 
 ---
 
@@ -173,8 +173,8 @@ If no config is found, the MCP will auto-detect:
 | `storyFilePattern` | `string` | `'**/*.stories.{ts,tsx}'` | Glob pattern for story files |
 | `componentPatterns` | `string[]` | `['**/src/**/*.tsx', '!**/*.stories.tsx', '!**/*.test.tsx']` | Glob patterns for component files |
 | `excludePatterns` | `string[]` | `['**/node_modules/**', '**/dist/**']` | Directories to exclude |
-| `licenseKey` | `string` | — | Pro license key |
-| `templatesDir` | `string` | — | Custom templates directory |
+| `licenseKey` | `string` | - | Pro license key |
+| `templatesDir` | `string` | - | Custom templates directory |
 | `storybookVersion` | `7 \| 8` | `8` | Storybook version |
 
 ### Library Configuration
@@ -186,8 +186,8 @@ Each library in the `libraries` array supports:
 | `name` | `string` | ✅ | Library identifier for filtering |
 | `path` | `string` | ✅ | Path relative to `rootDir` |
 | `storyTitlePrefix` | `string` | ✅ | Prefix for Storybook titles (e.g., `"UI"` → `"UI/Button"`) |
-| `decorators` | `string[]` | — | Default decorators to apply to all stories |
-| `importAlias` | `string` | — | Import path alias (e.g., `"@ui"`) |
+| `decorators` | `string[]` | - | Default decorators to apply to all stories |
+| `importAlias` | `string` | - | Import path alias (e.g., `"@ui"`) |
 
 ---
 
@@ -318,8 +318,8 @@ List all React components in configured libraries.
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `library` | `string` | — | all | Filter by library name |
-| `hasStory` | `boolean` | — | all | Filter by story status: `true` = only with stories, `false` = only without |
+| `library` | `string` | - | all | Filter by library name |
+| `hasStory` | `boolean` | - | all | Filter by story status: `true` = only with stories, `false` = only without |
 
 **Examples:**
 
@@ -472,14 +472,14 @@ Generate a Storybook story file for a component.
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `componentPath` | `string` | ✅ | — | Path to the component file |
-| `includeVariants` | `boolean` | — | `true` | Add stories showcasing all size/variant combinations |
-| `includeInteractive` | `boolean` | — | `true` | Add play function tests for user interactions |
-| `includeA11y` | `boolean` | — | `false` | Add accessibility test story |
-| `includeResponsive` | `boolean` | — | `false` | Add mobile/tablet/desktop viewport stories |
-| `template` | `string` | — | auto | Template to use (see [Templates](#templates)) |
-| `overwrite` | `boolean` | — | `false` | Replace existing story file |
-| `dryRun` | `boolean` | — | `false` | Preview without writing to disk |
+| `componentPath` | `string` | ✅ | - | Path to the component file |
+| `includeVariants` | `boolean` | - | `true` | Add stories showcasing all size/variant combinations |
+| `includeInteractive` | `boolean` | - | `true` | Add play function tests for user interactions |
+| `includeA11y` | `boolean` | - | `false` | Add accessibility test story |
+| `includeResponsive` | `boolean` | - | `false` | Add mobile/tablet/desktop viewport stories |
+| `template` | `string` | - | auto | Template to use (see [Templates](#templates)) |
+| `overwrite` | `boolean` | - | `false` | Replace existing story file |
+| `dryRun` | `boolean` | - | `false` | Preview without writing to disk |
 
 **Examples:**
 
@@ -551,9 +551,9 @@ Generate a Playwright/Vitest test file for a component. **(Pro only)**
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `componentPath` | `string` | ✅ | — | Path to the component file |
-| `overwrite` | `boolean` | — | `false` | Replace existing test file |
-| `dryRun` | `boolean` | — | `false` | Preview without writing to disk |
+| `componentPath` | `string` | ✅ | - | Path to the component file |
+| `overwrite` | `boolean` | - | `false` | Replace existing test file |
+| `dryRun` | `boolean` | - | `false` | Preview without writing to disk |
 
 **Examples:**
 
@@ -600,9 +600,9 @@ Generate MDX documentation for a component. **(Pro only)**
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `componentPath` | `string` | ✅ | — | Path to the component file |
-| `overwrite` | `boolean` | — | `false` | Replace existing docs file |
-| `dryRun` | `boolean` | — | `false` | Preview without writing to disk |
+| `componentPath` | `string` | ✅ | - | Path to the component file |
+| `overwrite` | `boolean` | - | `false` | Replace existing docs file |
+| `dryRun` | `boolean` | - | `false` | Preview without writing to disk |
 
 **Examples:**
 
@@ -695,18 +695,18 @@ Validate an existing story file for best practices and issues.
 
 ### `sync_all`
 
-Sync all components — create missing stories/tests/docs and update changed ones.
+Sync all components - create missing stories/tests/docs and update changed ones.
 
 **Parameters:**
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `library` | `string` | — | all | Only sync components in this library |
-| `generateStories` | `boolean` | — | `true` | Generate story files |
-| `generateTests` | `boolean` | — | `true` | Generate test files (Pro only) |
-| `generateDocs` | `boolean` | — | `true` | Generate MDX docs (Pro only) |
-| `updateExisting` | `boolean` | — | `true` | Update files when components change |
-| `dryRun` | `boolean` | — | `false` | Preview without writing to disk |
+| `library` | `string` | - | all | Only sync components in this library |
+| `generateStories` | `boolean` | - | `true` | Generate story files |
+| `generateTests` | `boolean` | - | `true` | Generate test files (Pro only) |
+| `generateDocs` | `boolean` | - | `true` | Generate MDX docs (Pro only) |
+| `updateExisting` | `boolean` | - | `true` | Update files when components change |
+| `dryRun` | `boolean` | - | `false` | Preview without writing to disk |
 
 **Examples:**
 
@@ -781,11 +781,11 @@ Sync a single component's story, test, and docs.
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `componentPath` | `string` | ✅ | — | Path to the component file |
-| `generateStories` | `boolean` | — | `true` | Generate story file |
-| `generateTests` | `boolean` | — | `true` | Generate test file (Pro only) |
-| `generateDocs` | `boolean` | — | `true` | Generate MDX docs (Pro only) |
-| `dryRun` | `boolean` | — | `false` | Preview without writing to disk |
+| `componentPath` | `string` | ✅ | - | Path to the component file |
+| `generateStories` | `boolean` | - | `true` | Generate story file |
+| `generateTests` | `boolean` | - | `true` | Generate test file (Pro only) |
+| `generateDocs` | `boolean` | - | `true` | Generate MDX docs (Pro only) |
+| `dryRun` | `boolean` | - | `false` | Preview without writing to disk |
 
 **Examples:**
 
@@ -922,7 +922,7 @@ Get story coverage statistics for the project.
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `library` | `string` | — | all | Filter by library name |
+| `library` | `string` | - | all | Filter by library name |
 
 **Examples:**
 
@@ -979,8 +979,8 @@ Get a prioritized list of components that need stories.
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `limit` | `number` | — | `10` | Max number of suggestions |
-| `library` | `string` | — | all | Filter by library name |
+| `limit` | `number` | - | `10` | Max number of suggestions |
+| `library` | `string` | - | all | Filter by library name |
 
 **Examples:**
 
@@ -1038,7 +1038,7 @@ Templates are pre-built story structures for different use cases. Use them with 
 
 ### Template Examples
 
-**`basic`** — Minimal setup:
+**`basic`** - Minimal setup:
 
 ```tsx
 import type { Meta, StoryObj } from '@storybook/react'
@@ -1060,7 +1060,7 @@ export const Default: Story = {
 }
 ```
 
-**`with-variants`** — Showcase all combinations:
+**`with-variants`** - Showcase all combinations:
 
 ```tsx
 export const Sizes: Story = {
@@ -1088,7 +1088,7 @@ export const AllVariants: Story = {
 }
 ```
 
-**`with-msw`** — Mock API responses:
+**`with-msw`** - Mock API responses:
 
 ```tsx
 import { http, HttpResponse } from 'msw'
@@ -1136,7 +1136,7 @@ export const Error: Story = {
 }
 ```
 
-**`interactive`** — Play function tests:
+**`interactive`** - Play function tests:
 
 ```tsx
 import { expect, userEvent, within } from '@storybook/test'
@@ -1208,8 +1208,8 @@ const server = createStorybookMCPServer({
 
 ## Related Projects
 
-- [forgekit-chakra-mcp](https://github.com/effinrich/chakra-mcp) — Chakra UI + Figma sync MCP
-- [@storybook/addon-mcp](https://github.com/storybookjs/mcp) — Official Storybook MCP (reads stories)
+- [forgekit-figma-mcp](https://github.com/effinrich/forgekit-figma-mcp) — Figma design tokens → Chakra/Tailwind/Shadcn sync MCP
+- [@storybook/addon-mcp](https://github.com/storybookjs/mcp) - Official Storybook MCP (reads stories)
 
 This MCP focuses on **generating** stories, while the official one focuses on **reading** existing Storybook data. They complement each other.
 
