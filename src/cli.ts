@@ -127,6 +127,26 @@ async function main() {
     process.exit(0)
   }
 
+  // Check if .storybook exists - if not, prompt user to run --setup
+  const storybookDir = path.join(cwd, '.storybook')
+  if (!fs.existsSync(storybookDir)) {
+    console.error(`
+⚠️  No .storybook configuration found.
+
+Run setup first to create Storybook config and scripts:
+
+  npx forgekit-storybook-mcp --setup
+
+This will:
+  • Create .storybook/main.ts and preview.ts
+  • Add storybook scripts to package.json
+  • Detect your framework (Chakra, shadcn, etc.)
+
+Use --setup --dry-run to preview without writing files.
+`)
+    process.exit(1)
+  }
+
   let config: StorybookMCPConfig
 
   // Try to load config from file
