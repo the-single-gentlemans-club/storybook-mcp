@@ -1,5 +1,5 @@
 {
-  "name": "@forgekit/storybook-mcp",
+  "name": "forgekit-storybook-mcp",
   "version": "0.1.0",
   "description": "MCP server for Storybook story generation, component analysis, and validation",
   "author": "Rich Tillman <richtillman@gmail.com>",
