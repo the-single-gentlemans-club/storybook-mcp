@@ -178,7 +178,7 @@ If no config is found, the MCP will auto-detect:
 | `excludePatterns` | `string[]` | `['**/node_modules/**', '**/dist/**']` | Directories to exclude |
 | `licenseKey` | `string` | - | Pro license key |
 | `templatesDir` | `string` | - | Custom templates directory |
-| `storybookVersion` | `7 \| 8` | `8` | Storybook version |
+| `storybookVersion` | `10` | Storybook version |
 
 ### Library Configuration
 
@@ -1201,7 +1201,7 @@ const server = createStorybookMCPServer({
       importAlias: '@ui',
     },
   ],
-  storybookVersion: 8,
+  storybookVersion: 10,
 })
 
 // Server is now ready to handle MCP requests

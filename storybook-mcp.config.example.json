@@ -37,5 +37,5 @@
     "**/.storybook/**",
     "**/coverage/**"
   ],
-  "storybookVersion": 8
+  "storybookVersion": 10
 }
