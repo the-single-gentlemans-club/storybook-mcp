@@ -70,7 +70,7 @@ For professional teams requiring complete coverage.
 - ✅ Priority support
 - ✅ Lifetime updates — no subscription
 
-**[👉 Get Pro License](coming soon - email hello@forgekit.dev)**
+**[👉 Get Pro License](coming soon - email forgekit@pm.me)**
 
 ### Activation
 
