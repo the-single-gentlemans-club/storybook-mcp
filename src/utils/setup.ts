@@ -160,6 +160,36 @@ export function findNxLibName(rootDir: string): string | undefined {
   return allLibs[0]?.name
 }
 
+/**
+ * Resolve the actual filesystem path for an Nx library name.
+ * findNxLibName() returns only the name; libraries can live in libs/ or packages/.
+ */
+function resolveNxLibPath(rootDir: string, nxLibName: string): string | null {
+  const libsDir = path.join(rootDir, 'libs')
+  const packagesDir = path.join(rootDir, 'packages')
+
+  // Nested structure mappings (must match findNxLibName's nestedUiPaths)
+  const nestedPaths: Array<{ dir: string; name: string }> = [
+    { dir: path.join(libsDir, 'shared', 'ui'), name: 'shared-ui' },
+    { dir: path.join(libsDir, 'ui'), name: 'ui' },
+    { dir: path.join(packagesDir, 'ui'), name: 'ui' },
+  ]
+  for (const { dir, name } of nestedPaths) {
+    if (name === nxLibName && fs.existsSync(dir)) {
+      return path.relative(rootDir, dir)
+    }
+  }
+
+  // Flat structure: libs/x or packages/x
+  for (const base of ['libs', 'packages']) {
+    const fullPath = path.join(rootDir, base, nxLibName)
+    if (fs.existsSync(fullPath)) {
+      return `${base}/${nxLibName}`
+    }
+  }
+  return null
+}
+
 // ===========================================
 // File Generation
 // ===========================================
@@ -527,15 +557,16 @@ export async function runSetup(
     // Check if @nx/storybook is installed
     const nxStorybookInstalled = fs.existsSync(path.join(rootDir, 'node_modules', '@nx', 'storybook'))
     
-    // Check if the library already has Storybook configured via Nx
-    const libStorybookDir = nxLibName
-      ? path.join(rootDir, 'libs', nxLibName, '.storybook')
+    // Resolve actual lib path (libs/ or packages/) — findNxLibName searches both
+    const libBasePath = nxLibName ? resolveNxLibPath(rootDir, nxLibName) : null
+    const libStorybookDir = libBasePath
+      ? path.join(rootDir, libBasePath, '.storybook')
       : null
     const nxStorybookConfigured = libStorybookDir && fs.existsSync(libStorybookDir)
 
     if (nxStorybookConfigured) {
       console.log(`  ✅ Storybook already configured for ${targetLib} via Nx`)
-      console.log(`     Config: libs/${nxLibName}/.storybook/`)
+      console.log(`     Config: ${libBasePath}/.storybook/`)
       console.log('')
     } else {
       console.log('  📋 Nx monorepo detected — use the Nx Storybook generator for proper setup:\n')
@@ -550,25 +581,16 @@ export async function runSetup(
       }
       console.log(`     npx nx g @nx/storybook:configuration ${targetLib}`)
       console.log('')
+      const createdPath = libBasePath || `libs/${targetLib}`
       console.log('  This creates:')
-      console.log(`     • libs/${targetLib}/.storybook/main.ts  (project-level config)`)
-      console.log(`     • libs/${targetLib}/.storybook/preview.ts`)
+      console.log(`     • ${createdPath}/.storybook/main.ts  (project-level config)`)
+      console.log(`     • ${createdPath}/.storybook/preview.ts`)
       console.log(`     • storybook + build-storybook targets in project.json`)
       console.log('')
       
       const nextStep = nxStorybookInstalled ? 2 : 3
       console.log(`  ${nextStep}. Install remaining Storybook packages:`)
-      
-      const sbDeps = [
-        'storybook@^10.0.0',
-        '@storybook/react@^10.0.0',
-      ]
-      if (framework === 'tamagui') {
-        sbDeps.push('@storybook/react-webpack5@^10.0.0')
-      } else {
-        sbDeps.push('@storybook/react-vite@^10.0.0')
-      }
-      console.log(`     npm install -D ${sbDeps.join(' ')}`)
+      console.log(`     npm install -D ${result.dependencies.dev.join(' ')}`)
       console.log('')
       console.log(`  ${nextStep + 1}. Run Storybook:`)
       console.log(`     npx nx storybook ${targetLib}`)
