@@ -286,7 +286,7 @@ Add to `.cursor/mcp.json` (or `.vscode/mcp.json`):
 ```json
 {
   "mcpServers": {
-    "storybook": {
+    "forgekit-storybook": {
       "command": "npx",
       "args": ["forgekit-storybook-mcp"]
     }
@@ -299,7 +299,7 @@ With CLI flags:
 ```json
 {
   "mcpServers": {
-    "storybook": {
+    "forgekit-storybook": {
       "command": "npx",
       "args": ["forgekit-storybook-mcp", "--skip-init"]
     }
@@ -312,7 +312,7 @@ If installed locally (faster startup):
 ```json
 {
   "mcpServers": {
-    "storybook": {
+    "forgekit-storybook": {
       "command": "node",
       "args": ["node_modules/forgekit-storybook-mcp/dist/cli.js"]
     }
@@ -327,7 +327,7 @@ Add to `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "storybook": {
+    "forgekit-storybook": {
       "command": "npx",
       "args": ["forgekit-storybook-mcp"],
       "cwd": "/path/to/your/project"
@@ -1300,3 +1300,4 @@ This MCP focuses on **generating** stories, while the official one focuses on **
 ## License
 
 MIT
+
