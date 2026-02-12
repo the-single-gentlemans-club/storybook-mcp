@@ -1,6 +1,6 @@
 {
   "name": "forgekit-storybook-mcp",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "MCP server for Storybook story generation, component analysis, and validation",
   "author": "Rich Tillman <richtillman@gmail.com>",
   "license": "MIT",
