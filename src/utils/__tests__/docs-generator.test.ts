@@ -27,9 +27,10 @@ function makeAnalysis(overrides: Partial<ComponentAnalysis> = {}): ComponentAnal
     ],
     dependencies: {
       usesRouter: false, usesReactQuery: false, usesChakra: false,
-      usesGluestack: false, usesReactNative: false, usesEmotion: false,
-      usesTailwind: false, usesFramerMotion: false, usesMSW: false,
-      usesGlobalState: false, otherImports: [],
+      usesShadcn: false, usesTamagui: false, usesGluestack: false,
+      usesReactNative: false, usesEmotion: false, usesTailwind: false,
+      usesFramerMotion: false, usesMSW: false, usesGlobalState: false,
+      otherImports: [],
     },
     suggestions: [],
     sourcePreview: '',

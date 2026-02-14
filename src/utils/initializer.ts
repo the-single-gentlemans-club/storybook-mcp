@@ -320,10 +320,11 @@ async function syncComponent(
 
       if (!dryRun) {
         await writeStoryFile(config, story, true)
+        // Only hash file after successful write
+        newCache.components[component.filePath].storyHash = hashFile(path.join(config.rootDir, storyPath))
       }
 
       result.story = { action: 'created', path: storyPath }
-      newCache.components[component.filePath].storyHash = hashFile(path.join(config.rootDir, storyPath))
 
     } else if (updateExisting && componentChanged) {
       // Update existing story if component changed
@@ -337,10 +338,11 @@ async function syncComponent(
 
       if (!dryRun) {
         await writeStoryFile(config, story, true)
+        // Only hash file after successful write
+        newCache.components[component.filePath].storyHash = hashFile(path.join(config.rootDir, storyPath))
       }
 
       result.story = { action: 'updated', path: storyPath, reason: 'component changed' }
-      newCache.components[component.filePath].storyHash = hashFile(path.join(config.rootDir, storyPath))
 
     } else {
       result.story = { action: 'unchanged', path: storyPath }
@@ -359,10 +361,11 @@ async function syncComponent(
 
       if (!dryRun) {
         await writeTestFile(config, test)
+        // Only hash file after successful write
+        newCache.components[component.filePath].testHash = hashFile(path.join(config.rootDir, testPath))
       }
 
       result.test = { action: 'created', path: testPath }
-      newCache.components[component.filePath].testHash = hashFile(path.join(config.rootDir, testPath))
 
     } else if (updateExisting && componentChanged) {
       const componentAnalysis = await getAnalysis()
@@ -370,10 +373,11 @@ async function syncComponent(
 
       if (!dryRun) {
         await writeTestFile(config, test, true)
+        // Only hash file after successful write
+        newCache.components[component.filePath].testHash = hashFile(path.join(config.rootDir, testPath))
       }
 
       result.test = { action: 'updated', path: testPath, reason: 'component changed' }
-      newCache.components[component.filePath].testHash = hashFile(path.join(config.rootDir, testPath))
 
     } else {
       result.test = { action: 'unchanged', path: testPath }
@@ -392,10 +396,11 @@ async function syncComponent(
 
       if (!dryRun) {
         await writeDocsFile(config, docs)
+        // Only hash file after successful write
+        newCache.components[component.filePath].docsHash = hashFile(path.join(config.rootDir, docsPath))
       }
 
       result.docs = { action: 'created', path: docsPath }
-      newCache.components[component.filePath].docsHash = hashFile(path.join(config.rootDir, docsPath))
 
     } else if (updateExisting && componentChanged) {
       const componentAnalysis = await getAnalysis()
@@ -403,10 +408,11 @@ async function syncComponent(
 
       if (!dryRun) {
         await writeDocsFile(config, docs, true)
+        // Only hash file after successful write
+        newCache.components[component.filePath].docsHash = hashFile(path.join(config.rootDir, docsPath))
       }
 
       result.docs = { action: 'updated', path: docsPath, reason: 'component changed' }
-      newCache.components[component.filePath].docsHash = hashFile(path.join(config.rootDir, docsPath))
 
     } else {
       result.docs = { action: 'unchanged', path: docsPath }

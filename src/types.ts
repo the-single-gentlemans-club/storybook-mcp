@@ -138,6 +138,12 @@ export interface DependencyInfo {
   /** Uses Chakra UI */
   usesChakra: boolean
 
+  /** Uses shadcn/ui */
+  usesShadcn: boolean
+
+  /** Uses Tamagui */
+  usesTamagui: boolean
+
   /** Uses Gluestack UI */
   usesGluestack: boolean
 

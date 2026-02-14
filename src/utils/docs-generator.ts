@@ -112,41 +112,11 @@ ${generateIntegrationNotes(dependencies)}
 `
   }
 
-  // Composition examples
-  content += `
-## Composition
+  // Composition examples (framework-specific)
+  content += generateCompositionExample(config.framework, name, variantProp)
 
-### With Other Components
-
-\`\`\`tsx
-import { Stack } from '@chakra-ui/react'
-
-<Stack spacing={4}>
-  <${name}${variantProp ? ` variant="${variantProp.controlOptions?.[0]}"` : ''}>
-    First item
-  </${name}>
-  <${name}${variantProp ? ` variant="${variantProp.controlOptions?.[1] || variantProp.controlOptions?.[0]}"` : ''}>
-    Second item
-  </${name}>
-</Stack>
-\`\`\`
-`
-
-  // Responsive design
-  content += `
-## Responsive Design
-
-Use responsive props for different screen sizes:
-
-\`\`\`tsx
-<${name}
-  ${sizeProp ? `size={{ base: '${sizeProp.controlOptions?.[0]}', md: '${sizeProp.controlOptions?.[1] || sizeProp.controlOptions?.[0]}' }}` : ''}
-  width={{ base: '100%', md: 'auto' }}
->
-  Responsive ${name}
-</${name}>
-\`\`\`
-`
+  // Responsive design (framework-specific)
+  content += generateResponsiveExample(config.framework, name, sizeProp)
 
   // Best practices
   content += `
@@ -363,6 +333,206 @@ function generateRelatedComponents(
   }
 
   return related.join('\n')
+}
+
+/**
+ * Generate framework-specific composition example
+ */
+function generateCompositionExample(
+  framework: StorybookMCPConfig['framework'],
+  name: string,
+  variantProp?: PropDefinition
+): string {
+  const variant1 = variantProp?.controlOptions?.[0] || ''
+  const variant2 = variantProp?.controlOptions?.[1] || variant1
+
+  switch (framework) {
+    case 'chakra':
+      return `
+## Composition
+
+### With Other Components
+
+\`\`\`tsx
+import { Stack } from '@chakra-ui/react'
+
+<Stack spacing={4}>
+  <${name}${variantProp ? ` variant="${variant1}"` : ''}>
+    First item
+  </${name}>
+  <${name}${variantProp ? ` variant="${variant2}"` : ''}>
+    Second item
+  </${name}>
+</Stack>
+\`\`\`
+`
+
+    case 'tamagui':
+      return `
+## Composition
+
+### With Other Components
+
+\`\`\`tsx
+import { YStack } from 'tamagui'
+
+<YStack gap="$4">
+  <${name}${variantProp ? ` variant="${variant1}"` : ''}>
+    First item
+  </${name}>
+  <${name}${variantProp ? ` variant="${variant2}"` : ''}>
+    Second item
+  </${name}>
+</YStack>
+\`\`\`
+`
+
+    case 'gluestack':
+      return `
+## Composition
+
+### With Other Components
+
+\`\`\`tsx
+import { VStack } from '@gluestack-ui/themed'
+
+<VStack space="md">
+  <${name}${variantProp ? ` variant="${variant1}"` : ''}>
+    First item
+  </${name}>
+  <${name}${variantProp ? ` variant="${variant2}"` : ''}>
+    Second item
+  </${name}>
+</VStack>
+\`\`\`
+`
+
+    case 'shadcn':
+    case 'vanilla':
+    default:
+      return `
+## Composition
+
+### With Other Components
+
+\`\`\`tsx
+<div className="flex flex-col gap-4">
+  <${name}${variantProp ? ` variant="${variant1}"` : ''}>
+    First item
+  </${name}>
+  <${name}${variantProp ? ` variant="${variant2}"` : ''}>
+    Second item
+  </${name}>
+</div>
+\`\`\`
+`
+  }
+}
+
+/**
+ * Generate framework-specific responsive example
+ */
+function generateResponsiveExample(
+  framework: StorybookMCPConfig['framework'],
+  name: string,
+  sizeProp?: PropDefinition
+): string {
+  const size1 = sizeProp?.controlOptions?.[0] || 'md'
+  const size2 = sizeProp?.controlOptions?.[1] || 'lg'
+
+  switch (framework) {
+    case 'chakra':
+      return `
+## Responsive Design
+
+Use responsive props for different screen sizes:
+
+\`\`\`tsx
+<${name}
+  ${sizeProp ? `size={{ base: '${size1}', md: '${size2}' }}` : ''}
+  width={{ base: '100%', md: 'auto' }}
+>
+  Responsive ${name}
+</${name}>
+\`\`\`
+`
+
+    case 'tamagui':
+      return `
+## Responsive Design
+
+Use media queries with Tamagui tokens:
+
+\`\`\`tsx
+<${name}
+  ${sizeProp ? `size="$${size1}"\n  $md={{ size: "$${size2}" }}` : ''}
+  width="100%"
+  $md={{ width: 'auto' }}
+>
+  Responsive ${name}
+</${name}>
+\`\`\`
+`
+
+    case 'gluestack':
+      return `
+## Responsive Design
+
+Use responsive arrays or objects:
+
+\`\`\`tsx
+<${name}
+  ${sizeProp ? `size={{ base: '${size1}', md: '${size2}' }}` : ''}
+  w={{ base: '100%', md: 'auto' }}
+>
+  Responsive ${name}
+</${name}>
+\`\`\`
+`
+
+    case 'shadcn':
+      return `
+## Responsive Design
+
+Use Tailwind responsive prefixes:
+
+\`\`\`tsx
+<${name}
+  ${sizeProp ? `className="${size1} md:${size2}"` : ''}
+  className="w-full md:w-auto"
+>
+  Responsive ${name}
+</${name}>
+\`\`\`
+`
+
+    case 'vanilla':
+    default:
+      return `
+## Responsive Design
+
+Use CSS media queries for responsive behavior:
+
+\`\`\`tsx
+<${name}
+  ${sizeProp ? `size="${size1}"` : ''}
+  style={{ width: '100%' }}
+  className="responsive-component"
+>
+  Responsive ${name}
+</${name}>
+
+<style>
+  @media (min-width: 768px) {
+    .responsive-component {
+      width: auto;
+      ${sizeProp ? `/* Use ${size2} size */` : ''}
+    }
+  }
+</style>
+\`\`\`
+`
+  }
 }
 
 /**

@@ -24,9 +24,10 @@ function makeAnalysis(overrides: Partial<ComponentAnalysis> = {}): ComponentAnal
     props: [],
     dependencies: {
       usesRouter: false, usesReactQuery: false, usesChakra: false,
-      usesGluestack: false, usesReactNative: false, usesEmotion: false,
-      usesTailwind: false, usesFramerMotion: false, usesMSW: false,
-      usesGlobalState: false, otherImports: [],
+      usesShadcn: false, usesTamagui: false, usesGluestack: false,
+      usesReactNative: false, usesEmotion: false, usesTailwind: false,
+      usesFramerMotion: false, usesMSW: false, usesGlobalState: false,
+      otherImports: [],
     },
     suggestions: [],
     sourcePreview: '',
@@ -83,9 +84,10 @@ describe('generator', () => {
     const analysis = makeAnalysis({
       dependencies: {
         usesRouter: false, usesReactQuery: false, usesChakra: false,
-        usesGluestack: false, usesReactNative: true, usesEmotion: false,
-        usesTailwind: false, usesFramerMotion: false, usesMSW: false,
-        usesGlobalState: false, otherImports: [],
+        usesShadcn: false, usesTamagui: false, usesGluestack: false,
+        usesReactNative: true, usesEmotion: false, usesTailwind: false,
+        usesFramerMotion: false, usesMSW: false, usesGlobalState: false,
+        otherImports: [],
       },
     })
     const story = await generateStory(makeConfig(), analysis, {
@@ -99,8 +101,9 @@ describe('generator', () => {
     const analysis = makeAnalysis({
       dependencies: {
         usesRouter: true, usesReactQuery: false, usesChakra: false,
-        usesGluestack: false, usesReactNative: false, usesEmotion: false,
-        usesTailwind: false, usesFramerMotion: false, usesMSW: false,
+        usesShadcn: false, usesTamagui: false, usesGluestack: false,
+        usesReactNative: false, usesEmotion: false, usesTailwind: false,
+        usesFramerMotion: false, usesMSW: false,
         usesGlobalState: false, otherImports: [],
       },
     })

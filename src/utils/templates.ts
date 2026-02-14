@@ -243,7 +243,7 @@ export const Loading: Story = {
     msw: {
       handlers: [
         http.get('/api/data', async () => {
-          await new Promise((resolve) => setTimeout(resolve, 999999))
+          await new Promise((resolve) => setTimeout(resolve, 5000))
           return HttpResponse.json({})
         }),
       ],
@@ -535,34 +535,43 @@ export const Empty: Story = {}
 
 /**
  * Pre-filled form
+ * Customize based on your component's props
  */
 export const Prefilled: Story = {
   args: {
-    defaultValues: {
-      email: 'user@example.com',
-      name: 'John Doe',
-    },
+    // Example: Add your component's default values prop
+    // defaultValues: { email: 'user@example.com', name: 'John Doe' },
+    // Or use your component's specific props:
+    // value: { email: 'user@example.com' },
+    // initialData: { name: 'John Doe' },
   },
 }
 
 /**
  * With validation errors
+ * Customize based on how your component handles errors
  */
 export const WithErrors: Story = {
   args: {
-    errors: {
-      email: 'Invalid email address',
-      name: 'Name is required',
-    },
+    // Example: Add your component's error handling props
+    // errors: { email: 'Invalid email address', name: 'Name is required' },
+    // Or use your component's specific props:
+    // validationErrors: { email: { message: 'Invalid email' } },
+    // errorState: { name: 'Required field' },
   },
 }
 
 /**
  * Submitting state
+ * Customize based on your component's loading/submitting prop
  */
 export const Submitting: Story = {
   args: {
-    isSubmitting: true,
+    // Example: Add your component's submitting state prop
+    // isSubmitting: true,
+    // Or use your component's specific props:
+    // loading: true,
+    // disabled: true,
   },
 }
 

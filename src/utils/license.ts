@@ -38,6 +38,9 @@ const CACHE_FILE = path.join(CACHE_DIR, 'license-cache.json')
 // Cache duration: 24 hours
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000
 
+// Module-level cache for async validation results
+let cachedValidation: LicenseStatus | null = null
+
 /**
  * Read cached license status
  */
@@ -112,14 +115,16 @@ async function validateWithPolar(key: string): Promise<boolean> {
 }
 
 /**
- * Validate license key and return status
- * 
- * Supports Polar.sh license keys (UUID format)
- * Validates via Polar API with local caching
+ * Validate license key and return status (synchronous)
+ *
+ * Returns cached results from async validation if available.
+ * Otherwise checks file cache or returns free tier.
+ *
+ * Call validateLicenseAsync() at startup to populate the cache.
  */
 export function validateLicense(config: StorybookMCPConfig): LicenseStatus {
   const key = config.licenseKey || process.env.STORYBOOK_MCP_LICENSE
-  
+
   // No key = Free Tier
   if (!key) {
     return {
@@ -129,7 +134,12 @@ export function validateLicense(config: StorybookMCPConfig): LicenseStatus {
     }
   }
 
-  // Check cache first
+  // Return cached validation result if available (set by validateLicenseAsync)
+  if (cachedValidation !== null) {
+    return cachedValidation
+  }
+
+  // Check file cache as fallback
   const cached = readCache()
   if (cached && cached.key === key) {
     const age = Date.now() - cached.checkedAt
@@ -142,8 +152,8 @@ export function validateLicense(config: StorybookMCPConfig): LicenseStatus {
     }
   }
 
-  // Return free tier for now, validate async
-  // The actual validation happens in validateLicenseAsync
+  // No cache available - return free tier
+  // validateLicenseAsync should be called at startup to populate cache
   return {
     isValid: true,
     tier: 'free',
@@ -153,18 +163,21 @@ export function validateLicense(config: StorybookMCPConfig): LicenseStatus {
 
 /**
  * Async license validation with API call
- * Call this at startup to validate and cache the result
+ * Call this at startup to validate and cache the result.
+ * Populates the module-level cache for subsequent validateLicense() calls.
  */
 export async function validateLicenseAsync(config: StorybookMCPConfig): Promise<LicenseStatus> {
   const key = config.licenseKey || process.env.STORYBOOK_MCP_LICENSE
-  
+
   // No key = Free Tier
   if (!key) {
-    return {
+    const status: LicenseStatus = {
       isValid: true,
       tier: 'free',
       maxSyncLimit: 5
     }
+    cachedValidation = status
+    return status
   }
 
   // Check cache first
@@ -172,35 +185,44 @@ export async function validateLicenseAsync(config: StorybookMCPConfig): Promise<
   if (cached && cached.key === key) {
     const age = Date.now() - cached.checkedAt
     if (age < CACHE_TTL_MS) {
-      return {
+      const status: LicenseStatus = {
         isValid: cached.valid,
         tier: cached.valid ? 'pro' : 'free',
         maxSyncLimit: cached.valid ? Infinity : 5
       }
+      cachedValidation = status
+      return status
     }
   }
 
   // Validate with Polar
   const isValid = await validateWithPolar(key)
-  
-  // Cache the result
+
+  // Write to file cache
   writeCache({
     key,
     valid: isValid,
     checkedAt: Date.now()
   })
 
-  if (!isValid) {
-    console.error('[storybook-mcp] Invalid or inactive license key. Using Free tier.')
-  } else {
-    console.error('[storybook-mcp] License validated. Pro features enabled.')
-  }
-
-  return {
+  // Create status object
+  const status: LicenseStatus = {
     isValid,
     tier: isValid ? 'pro' : 'free',
     maxSyncLimit: isValid ? Infinity : 5
   }
+
+  // Store in module-level cache for synchronous access
+  cachedValidation = status
+
+  // Log result (use console.log for success, console.error for failure)
+  if (!isValid) {
+    console.error('[storybook-mcp] Invalid or inactive license key. Using Free tier.')
+  } else {
+    console.log('[storybook-mcp] License validated. Pro features enabled.')
+  }
+
+  return status
 }
 
 /**

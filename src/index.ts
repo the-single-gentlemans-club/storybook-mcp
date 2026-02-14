@@ -481,8 +481,15 @@ export function createStorybookMCPServer(config: StorybookMCPConfig) {
 
 /**
  * Run the MCP server with stdio transport
+ * Ensures license validation is performed before starting
  */
 export async function runServer(config: StorybookMCPConfig) {
+  // Import here to avoid circular dependency
+  const { validateLicenseAsync } = await import('./utils/license.js')
+
+  // Validate license and cache result for all tool calls
+  await validateLicenseAsync(config)
+
   const server = createStorybookMCPServer(config)
   const transport = new StdioServerTransport()
   await server.connect(transport)

@@ -15,9 +15,10 @@ function makeConfig(): StorybookMCPConfig {
 
 const baseDeps = {
   usesRouter: false, usesReactQuery: false, usesChakra: false,
-  usesGluestack: false, usesReactNative: false, usesEmotion: false,
-  usesTailwind: false, usesFramerMotion: false, usesMSW: false,
-  usesGlobalState: false, otherImports: [] as string[],
+  usesShadcn: false, usesTamagui: false, usesGluestack: false,
+  usesReactNative: false, usesEmotion: false, usesTailwind: false,
+  usesFramerMotion: false, usesMSW: false, usesGlobalState: false,
+  otherImports: [] as string[],
 }
 
 describe('test-generator', () => {

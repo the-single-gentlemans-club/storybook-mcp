@@ -289,6 +289,8 @@ function analyzeDependencies(source: string): DependencyInfo {
     usesRouter: /from ['"]react-router|from ['"]@tanstack\/react-router|from ['"]next\/navigation/.test(source),
     usesReactQuery: /from ['"]@tanstack\/react-query|from ['"]react-query/.test(source),
     usesChakra: /from ['"]@chakra-ui/.test(source),
+    usesShadcn: /from ['"]@radix-ui\/|from ['"]class-variance-authority/.test(source),
+    usesTamagui: /from ['"]tamagui|from ['"]@tamagui/.test(source),
     usesGluestack: /from ['"]@gluestack-ui/.test(source),
     usesReactNative: /from ['"]react-native['"]/.test(source) || /from ['"]expo-/.test(source),
     usesEmotion: /from ['"]@emotion/.test(source),
