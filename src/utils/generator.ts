@@ -317,6 +317,7 @@ function buildVariantStories(analysis: ComponentAnalysis): string | null {
     return null
   }
 
+  const hasChildren = analysis.props.some(p => p.name === 'children')
   let stories = ''
 
   // Size story
@@ -327,7 +328,11 @@ function buildVariantStories(analysis: ComponentAnalysis): string | null {
     stories += `  render: () => (\n`
     stories += `    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>\n`
     for (const size of sizeProp.controlOptions) {
-      stories += `      <${analysis.name} size="${size}">${size}</${analysis.name}>\n`
+      if (hasChildren) {
+        stories += `      <${analysis.name} size="${size}">${size}</${analysis.name}>\n`
+      } else {
+        stories += `      <${analysis.name} size="${size}" />\n`
+      }
     }
     stories += `    </div>\n`
     stories += `  ),\n`
@@ -342,7 +347,11 @@ function buildVariantStories(analysis: ComponentAnalysis): string | null {
     stories += `  render: () => (\n`
     stories += `    <div style={{ display: 'flex', gap: '1rem' }}>\n`
     for (const variant of variantProp.controlOptions) {
-      stories += `      <${analysis.name} variant="${variant}">${variant}</${analysis.name}>\n`
+      if (hasChildren) {
+        stories += `      <${analysis.name} variant="${variant}">${variant}</${analysis.name}>\n`
+      } else {
+        stories += `      <${analysis.name} variant="${variant}" />\n`
+      }
     }
     stories += `    </div>\n`
     stories += `  ),\n`
@@ -356,23 +365,34 @@ function buildVariantStories(analysis: ComponentAnalysis): string | null {
  * Build interactive story with play function
  */
 function buildInteractiveStory(analysis: ComponentAnalysis): string {
-  const kebabName = toKebabCase(analysis.name)
+  const hasChildren = analysis.props.some(p => p.name === 'children')
   
   let story = `/**\n * Interactive test\n */\n`
   story += `export const Interactive: Story = {\n`
-  story += `  args: {\n`
-  story += `    children: 'Click me',\n`
-  story += `  },\n`
-  story += `  play: async ({ canvasElement }) => {\n`
-  story += `    const canvas = within(canvasElement)\n`
-  story += `    const element = canvas.getByText(/click me/i)\n`
-  story += `    \n`
-  story += `    // Verify element renders\n`
-  story += `    await expect(element).toBeInTheDocument()\n`
-  story += `    \n`
-  story += `    // Test interaction\n`
-  story += `    await userEvent.click(element)\n`
-  story += `  },\n`
+  
+  if (hasChildren) {
+    story += `  args: {\n`
+    story += `    children: 'Click me',\n`
+    story += `  },\n`
+    story += `  play: async ({ canvasElement }) => {\n`
+    story += `    const canvas = within(canvasElement)\n`
+    story += `    const element = canvas.getByText(/click me/i)\n`
+    story += `    \n`
+    story += `    // Verify element renders\n`
+    story += `    await expect(element).toBeInTheDocument()\n`
+    story += `    \n`
+    story += `    // Test interaction\n`
+    story += `    await userEvent.click(element)\n`
+    story += `  },\n`
+  } else {
+    story += `  play: async ({ canvasElement }) => {\n`
+    story += `    const canvas = within(canvasElement)\n`
+    story += `    \n`
+    story += `    // Verify component renders\n`
+    story += `    await expect(canvasElement.firstElementChild).toBeInTheDocument()\n`
+    story += `  },\n`
+  }
+  
   story += `}\n`
   
   return story
@@ -382,10 +402,14 @@ function buildInteractiveStory(analysis: ComponentAnalysis): string {
  * Build accessibility story
  */
 function buildA11yStory(analysis: ComponentAnalysis): string {
+  const hasChildren = analysis.props.some(p => p.name === 'children')
+  
   let story = `/**\n * Accessibility test\n */\n`
   story += `export const Accessibility: Story = {\n`
   story += `  args: {\n`
-  story += `    children: 'Accessible ${analysis.name}',\n`
+  if (hasChildren) {
+    story += `    children: 'Accessible ${analysis.name}',\n`
+  }
   story += `    'aria-label': '${analysis.name} example',\n`
   story += `  },\n`
   story += `  play: async ({ canvasElement }) => {\n`

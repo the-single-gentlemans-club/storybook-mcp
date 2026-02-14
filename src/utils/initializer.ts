@@ -13,6 +13,7 @@ import type {
   ComponentAnalysis,
 } from '../types.js'
 import { scanComponents, analyzeComponent } from './scanner.js'
+import { POLAR_UPGRADE_URL } from './constants.js'
 import { generateStory, writeStoryFile } from './generator.js'
 import { generateTest, writeTestFile } from './test-generator.js'
 import { generateDocs, writeDocsFile } from './docs-generator.js'
@@ -251,7 +252,7 @@ export async function initializeComponents(
   }
   if (limitApplied && maxComponents) {
     console.error(`\n⚠️  Free tier limit: Only ${maxComponents} components processed.`)
-    console.error(`   Upgrade to Pro for unlimited: https://polar.sh/forgekit`)
+    console.error(`   Upgrade to Pro for unlimited: ${POLAR_UPGRADE_URL}`)
   }
 
   return result

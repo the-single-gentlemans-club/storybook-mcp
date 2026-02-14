@@ -21,6 +21,7 @@ import { initializeComponents } from './utils/initializer.js'
 import { validateLicenseAsync } from './utils/license.js'
 import { runSetup } from './utils/setup.js'
 import { runPreflight } from './utils/preflight.js'
+import { POLAR_UPGRADE_URL } from './utils/constants.js'
 
 // Parse CLI arguments
 function parseArgs(): {
@@ -102,7 +103,7 @@ LICENSE:
   Free tier: 5 components, basic stories only
   Pro ($49): Unlimited components, tests, docs, all templates
   
-  Get Pro: https://polar.sh/forgekit
+  Get Pro: ${POLAR_UPGRADE_URL}
 
 MORE INFO:
   https://npmjs.com/package/forgekit-storybook-mcp

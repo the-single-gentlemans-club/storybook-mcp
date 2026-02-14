@@ -65,9 +65,9 @@ describe('generator', () => {
     expect(story.content).toContain('export const Sizes: Story')
     expect(story.content).toContain('export const Variants: Story')
     
-    // JSX should use proper component name, not template literals
-    expect(story.content).toContain('<Button size="sm">sm</Button>')
-    expect(story.content).toContain('<Button variant="solid">solid</Button>')
+    // JSX should use self-closing tags when component has no children prop
+    expect(story.content).toContain('<Button size="sm" />')
+    expect(story.content).toContain('<Button variant="solid" />')
   })
 
   it('generates interactive story for web components', async () => {
