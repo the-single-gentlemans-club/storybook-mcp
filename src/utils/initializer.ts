@@ -82,9 +82,6 @@ interface HashCache {
   version: string
   components: Record<string, {
     hash: string
-    storyHash?: string
-    testHash?: string
-    docsHash?: string
     lastSync: string
   }>
 }
@@ -320,8 +317,6 @@ async function syncComponent(
 
       if (!dryRun) {
         await writeStoryFile(config, story, true)
-        // Only hash file after successful write
-        newCache.components[component.filePath].storyHash = hashFile(path.join(config.rootDir, storyPath))
       }
 
       result.story = { action: 'created', path: storyPath }
@@ -338,15 +333,12 @@ async function syncComponent(
 
       if (!dryRun) {
         await writeStoryFile(config, story, true)
-        // Only hash file after successful write
-        newCache.components[component.filePath].storyHash = hashFile(path.join(config.rootDir, storyPath))
       }
 
       result.story = { action: 'updated', path: storyPath, reason: 'component changed' }
 
     } else {
       result.story = { action: 'unchanged', path: storyPath }
-      newCache.components[component.filePath].storyHash = cachedComponent?.storyHash
     }
   }
 
@@ -361,8 +353,6 @@ async function syncComponent(
 
       if (!dryRun) {
         await writeTestFile(config, test)
-        // Only hash file after successful write
-        newCache.components[component.filePath].testHash = hashFile(path.join(config.rootDir, testPath))
       }
 
       result.test = { action: 'created', path: testPath }
@@ -373,15 +363,12 @@ async function syncComponent(
 
       if (!dryRun) {
         await writeTestFile(config, test, true)
-        // Only hash file after successful write
-        newCache.components[component.filePath].testHash = hashFile(path.join(config.rootDir, testPath))
       }
 
       result.test = { action: 'updated', path: testPath, reason: 'component changed' }
 
     } else {
       result.test = { action: 'unchanged', path: testPath }
-      newCache.components[component.filePath].testHash = cachedComponent?.testHash
     }
   }
 
@@ -396,8 +383,6 @@ async function syncComponent(
 
       if (!dryRun) {
         await writeDocsFile(config, docs)
-        // Only hash file after successful write
-        newCache.components[component.filePath].docsHash = hashFile(path.join(config.rootDir, docsPath))
       }
 
       result.docs = { action: 'created', path: docsPath }
@@ -408,15 +393,12 @@ async function syncComponent(
 
       if (!dryRun) {
         await writeDocsFile(config, docs, true)
-        // Only hash file after successful write
-        newCache.components[component.filePath].docsHash = hashFile(path.join(config.rootDir, docsPath))
       }
 
       result.docs = { action: 'updated', path: docsPath, reason: 'component changed' }
 
     } else {
       result.docs = { action: 'unchanged', path: docsPath }
-      newCache.components[component.filePath].docsHash = cachedComponent?.docsHash
     }
   }
 

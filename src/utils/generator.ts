@@ -151,20 +151,7 @@ function buildImports(
     imports.push(`import { withRouter } from 'storybook-addon-remix-react-router'`)
   }
 
-  // Add framework-specific imports
-  if (framework === 'chakra' && analysis.dependencies.usesChakra) {
-    // ChakraProvider is typically in .storybook/preview.tsx
-  }
-
-  if (framework === 'tamagui' && analysis.dependencies.usesTamagui) {
-    // TamaguiProvider is typically in .storybook/preview.tsx
-    // Note: Tamagui components may need theme setup
-  }
-
-  if (framework === 'gluestack' && analysis.dependencies.usesGluestack) {
-    // GluestackUIProvider is typically in .storybook/preview.tsx
-  }
-
+  // Add framework-specific imports (Chakra/Tamagui/Gluestack providers are in .storybook/preview.tsx)
   if (framework === 'react-native' || analysis.dependencies.usesReactNative) {
     // React Native specific imports
     imports.push(`import { View } from 'react-native'`)
