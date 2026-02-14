@@ -250,10 +250,19 @@ Use --setup --dry-run to preview without writing files.
   if (!args.skipInit) {
     console.error(`[storybook-mcp] Running component sync...`)
     
+    // Free tier: disable test and docs generation
+    const canGenerateTests = license.tier === 'pro' && !args.noTests
+    const canGenerateDocs = license.tier === 'pro' && !args.noDocs
+
+    if (license.tier === 'free') {
+      if (!args.noTests) console.error('[storybook-mcp] Test generation requires Pro license')
+      if (!args.noDocs) console.error('[storybook-mcp] Docs generation requires Pro license')
+    }
+
     const initResult = await initializeComponents(config, {
       generateStories: !args.noStories,
-      generateTests: !args.noTests,
-      generateDocs: !args.noDocs,
+      generateTests: canGenerateTests,
+      generateDocs: canGenerateDocs,
       updateExisting: !args.noUpdate,
       dryRun: args.dryRun,
       maxComponents: license.tier === 'free' ? license.maxSyncLimit : undefined,

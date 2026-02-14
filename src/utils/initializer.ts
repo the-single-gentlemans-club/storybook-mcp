@@ -251,7 +251,7 @@ export async function initializeComponents(
   }
   if (limitApplied && maxComponents) {
     console.error(`\n⚠️  Free tier limit: Only ${maxComponents} components processed.`)
-    console.error(`   Upgrade to Pro for unlimited: coming soon - email forgekit@pm.me`)
+    console.error(`   Upgrade to Pro for unlimited: https://polar.sh/forgekit`)
   }
 
   return result
