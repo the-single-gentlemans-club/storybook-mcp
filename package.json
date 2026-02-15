@@ -48,7 +48,8 @@
     "@types/node": "^20.19.33",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
+    "vite": "^5.4.21",
+    "vitest": "^3.2.4"
   },
   "engines": {
     "node": ">=20.0.0"
