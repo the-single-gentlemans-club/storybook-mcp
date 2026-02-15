@@ -19,3 +19,4 @@ pro-keys.md
 # MCP cache
 .storybook-mcp-cache.json
 .forgekit/
+/.claude/settings.local.json
