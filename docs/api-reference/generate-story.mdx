@@ -1,0 +1,287 @@
+---
+title: 'generate_story'
+description: 'Generate complete Storybook story files with variants and interactive tests'
+---
+
+## Overview
+
+The `generate_story` tool creates comprehensive story files for React components, including:
+- Default story with all props
+- Size/variant combinations
+- Interactive play function tests
+- Accessibility checks
+- Responsive viewport tests
+- Framework-specific optimizations
+
+<Info>
+  This tool intelligently adapts to your component's props and framework (Chakra, shadcn, Tamagui, etc.)
+</Info>
+
+## Parameters
+
+<ParamField path="componentPath" type="string" required>
+  Path to the component file relative to project root
+
+  ```plaintext Example
+  "src/components/Button.tsx"
+  ```
+</ParamField>
+
+<ParamField path="includeVariants" type="boolean" default="true">
+  Generate stories showcasing all size/variant combinations
+
+  Automatically detects props like `size`, `variant`, `colorScheme`
+</ParamField>
+
+<ParamField path="includeInteractive" type="boolean" default="true">
+  Add play function tests for user interactions
+
+  - Click handlers
+  - Keyboard navigation
+  - Focus management
+  - Form submission
+</ParamField>
+
+<ParamField path="includeA11y" type="boolean" default="false">
+  Add accessibility test story with axe-core checks
+</ParamField>
+
+<ParamField path="includeResponsive" type="boolean" default="false">
+  Add mobile/tablet/desktop viewport stories
+</ParamField>
+
+<ParamField path="template" type="string">
+  Specific template to use (see [Templates](/templates/overview))
+
+  Options: `basic`, `with-variants`, `with-msw`, `with-router`, `interactive`, `form`, `page`
+</ParamField>
+
+<ParamField path="overwrite" type="boolean" default="false">
+  Replace existing story file if it exists
+
+  <Warning>This will overwrite your existing story</Warning>
+</ParamField>
+
+<ParamField path="dryRun" type="boolean" default="false">
+  Preview generated story without writing to disk
+</ParamField>
+
+## Examples
+
+<CodeGroup>
+```json Basic Story
+{
+  "componentPath": "src/components/Button.tsx"
+}
+```
+
+```json Minimal Story
+{
+  "componentPath": "src/components/Button.tsx",
+  "includeVariants": false,
+  "includeInteractive": false
+}
+```
+
+```json Full Coverage
+{
+  "componentPath": "src/components/Button.tsx",
+  "includeVariants": true,
+  "includeInteractive": true,
+  "includeA11y": true,
+  "includeResponsive": true
+}
+```
+
+```json Specific Template
+{
+  "componentPath": "src/components/UserList.tsx",
+  "template": "with-msw"
+}
+```
+
+```json Preview Only
+{
+  "componentPath": "src/components/Button.tsx",
+  "dryRun": true
+}
+```
+</CodeGroup>
+
+## Response
+
+<ResponseField name="story" type="object">
+  <Expandable title="Story Object">
+    <ResponseField name="content" type="string">
+      Complete story file content
+    </ResponseField>
+    <ResponseField name="filePath" type="string">
+      Where the story will be written (e.g., `src/components/Button.stories.tsx`)
+    </ResponseField>
+    <ResponseField name="imports" type="array">
+      List of imports used in the story
+    </ResponseField>
+    <ResponseField name="stories" type="array">
+      Names of all generated stories (e.g., `["Default", "Sizes", "Variants"]`)
+    </ResponseField>
+    <ResponseField name="warnings" type="array">
+      Any warnings or suggestions
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="written" type="boolean">
+  Whether the file was written to disk (false if `dryRun: true`)
+</ResponseField>
+
+<ResponseField name="path" type="string">
+  Absolute path to the story file
+</ResponseField>
+
+<ResponseField name="summary" type="string">
+  Human-readable summary
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "story": {
+    "content": "import type { Meta, StoryObj } from '@storybook/react'\nimport { Button } from './Button'\n\nconst meta: Meta<typeof Button> = {\n  title: 'Components/Button',\n  component: Button,\n  tags: [],\n}\n\nexport default meta\ntype Story = StoryObj<typeof Button>\n\nexport const Default: Story = {\n  args: {\n    children: 'Button',\n    variant: 'solid',\n    size: 'md',\n  },\n}\n\nexport const Sizes: Story = {\n  render: () => (\n    <div style={{ display: 'flex', gap: '1rem' }}>\n      <Button size=\"sm\">Small</Button>\n      <Button size=\"md\">Medium</Button>\n      <Button size=\"lg\">Large</Button>\n    </div>\n  ),\n}",
+    "filePath": "src/components/Button.stories.tsx",
+    "imports": ["@storybook/react", "./Button"],
+    "stories": ["Default", "Sizes", "Variants", "Interactive"],
+    "warnings": []
+  },
+  "written": true,
+  "path": "/absolute/path/to/src/components/Button.stories.tsx",
+  "summary": "Created story at src/components/Button.stories.tsx with 4 stories"
+}
+```
+
+## Smart Features
+
+### Prop Detection
+
+The tool intelligently detects and adapts to your component's props:
+
+<Tabs>
+  <Tab title="Variant Props">
+    Automatically creates variant matrices for:
+    - `size`: `sm`, `md`, `lg`, etc.
+    - `variant`: `solid`, `outline`, `ghost`, etc.
+    - `colorScheme`: `blue`, `red`, `green`, etc.
+
+    ```tsx Generated Story
+    export const AllVariants: Story = {
+      render: () => (
+        <div>
+          {(['sm', 'md', 'lg'] as const).map(size => (
+            {(['solid', 'outline'] as const).map(variant => (
+              <Button size={size} variant={variant}>
+                {size} {variant}
+              </Button>
+            ))}
+          ))}
+        </div>
+      ),
+    }
+    ```
+  </Tab>
+
+  <Tab title="Event Handlers">
+    Detects event props and adds interactive tests:
+    - `onClick` → Click test
+    - `onChange` → Change test
+    - `onSubmit` → Submit test
+
+    ```tsx Generated Play Function
+    export const ClickTest: Story = {
+      args: { children: 'Click me' },
+      play: async ({ canvasElement }) => {
+        const canvas = within(canvasElement)
+        const button = canvas.getByText(/click me/i)
+        await userEvent.click(button)
+        await expect(button).toHaveBeenCalled()
+      },
+    }
+    ```
+  </Tab>
+
+  <Tab title="Framework-Specific">
+    Adapts to detected framework:
+    - **Chakra UI**: Uses Stack components, theme tokens
+    - **Tamagui**: Uses YStack, theme variables
+    - **shadcn**: Uses className utilities
+    - **Vanilla**: Standard React patterns
+  </Tab>
+</Tabs>
+
+### Template Selection
+
+If no template is specified, the tool auto-selects based on component analysis:
+
+| Component Pattern | Auto-Selected Template |
+|-------------------|------------------------|
+| Has `onClick` | `interactive` |
+| Uses React Router | `with-router` |
+| Fetches data | `with-msw` |
+| Has form submission | `form` |
+| Full page layout | `page` |
+| Default | `with-variants` |
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion icon="check" title="Start with defaults">
+    Let the tool auto-detect and generate:
+    ```json
+    { "componentPath": "src/components/Button.tsx" }
+    ```
+    Then customize as needed.
+  </Accordion>
+
+  <Accordion icon="eye" title="Use dry-run first">
+    Preview before writing:
+    ```json
+    {
+      "componentPath": "src/components/Button.tsx",
+      "dryRun": true
+    }
+    ```
+  </Accordion>
+
+  <Accordion icon="recycle" title="Regenerate when props change">
+    When you update component props, regenerate with `overwrite: true`:
+    ```json
+    {
+      "componentPath": "src/components/Button.tsx",
+      "overwrite": true
+    }
+    ```
+  </Accordion>
+
+  <Accordion icon="bolt" title="Use sync_all for batch generation">
+    For multiple components, use [`sync_all`](/api-reference/sync-all) instead:
+    ```json
+    { "generateStories": true }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Related Tools
+
+<CardGroup cols={2}>
+  <Card title="analyze_component" icon="magnifying-glass" href="/api-reference/analyze-component">
+    Analyze before generating to see what will be created
+  </Card>
+  <Card title="validate_story" icon="check-circle" href="/api-reference/validate-story">
+    Validate generated stories for best practices
+  </Card>
+  <Card title="sync_component" icon="arrow-rotate-right" href="/api-reference/sync-component">
+    Generate story + test + docs in one call
+  </Card>
+  <Card title="Templates" icon="rectangle-code" href="/templates/overview">
+    Browse all available templates
+  </Card>
+</CardGroup>

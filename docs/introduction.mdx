@@ -1,0 +1,169 @@
+---
+title: Introduction
+description: 'A Model Context Protocol (MCP) server for Storybook story generation, component analysis, and validation'
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.svg"
+  alt="Storybook MCP Hero Light"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.svg"
+  alt="Storybook MCP Hero Dark"
+/>
+
+## What is Storybook MCP?
+
+Storybook MCP is a **Model Context Protocol server** that automates Storybook story generation, component analysis, and validation. It integrates with Claude, Cursor, and other MCP-compatible AI assistants to supercharge your Storybook workflow.
+
+<CardGroup cols={2}>
+  <Card
+    title="Auto-Generate Stories"
+    icon="wand-magic-sparkles"
+    href="/features/auto-sync"
+  >
+    Automatically create stories for all your components with variants, interactions, and accessibility tests
+  </Card>
+  <Card
+    title="Framework Detection"
+    icon="palette"
+    href="/features/frameworks"
+  >
+    Auto-detects Chakra UI, shadcn/ui, Tamagui, and Gluestack UI for framework-specific story generation
+  </Card>
+  <Card
+    title="Test Generation"
+    icon="flask"
+    href="/api-reference/generate-test"
+  >
+    Generate Playwright and Vitest tests from your components (Pro feature)
+  </Card>
+  <Card
+    title="Smart Analysis"
+    icon="magnifying-glass"
+    href="/api-reference/analyze-component"
+  >
+    Extract props, dependencies, and get intelligent suggestions for story coverage
+  </Card>
+</CardGroup>
+
+## Key Features
+
+<AccordionGroup>
+  <Accordion icon="rocket" title="Auto-Sync on Startup">
+    When the MCP server starts, it automatically:
+    - Scans all components in configured libraries
+    - Creates missing stories, tests, and MDX docs
+    - Updates existing files when components have changed
+    - Caches component hashes for efficient change detection
+  </Accordion>
+
+  <Accordion icon="palette" title="Framework Support">
+    Built-in detection and optimization for:
+    - **Chakra UI** - ThemeProvider, responsive props, color modes
+    - **shadcn/ui** - Radix primitives, CVA variants
+    - **Tamagui** - Native + web styling, responsive design
+    - **Gluestack UI** - Component composition patterns
+    - **React Native** - Platform-specific rendering
+    - **Vanilla React** - Universal fallback for any framework
+  </Accordion>
+
+  <Accordion icon="code" title="13 Powerful Tools">
+    - Component listing and filtering
+    - Deep component analysis
+    - Story generation with templates
+    - Test generation (Playwright/Vitest)
+    - MDX documentation generation
+    - Story validation
+    - Coverage tracking
+    - Health checks and diagnostics
+  </Accordion>
+
+  <Accordion icon="sparkles" title="8 Story Templates">
+    - Basic - Quick documentation
+    - With Variants - Showcase all sizes/variants
+    - With MSW - API mocking
+    - With Router - Navigation components
+    - Interactive - Play functions
+    - Form - Validation and submission
+    - Page - Full-page layouts
+    - Responsive - Multi-viewport testing
+  </Accordion>
+</AccordionGroup>
+
+## Quick Stats
+
+<CardGroup cols={3}>
+  <Card title="Downloads" icon="download">
+    2,200+ in 3 days
+  </Card>
+  <Card title="Version" icon="code-branch">
+    v0.9.3
+  </Card>
+  <Card title="Storybook" icon="book">
+    v10+ Required
+  </Card>
+</CardGroup>
+
+## Free vs Pro
+
+<Tabs>
+  <Tab title="Free Tier">
+    Perfect for individuals and trying out the tool.
+
+    <Check>List and analyze components</Check>
+    <Check>Generate basic stories</Check>
+    <Check>Sync up to 5 components per run</Check>
+    <Close>Advanced templates</Close>
+    <Close>Test generation</Close>
+    <Close>Docs generation</Close>
+  </Tab>
+
+  <Tab title="Pro Tier - $49 Lifetime">
+    For professional teams requiring complete coverage.
+
+    <Check>**Unlimited** component sync</Check>
+    <Check>**All** templates (Interactive, MSW, Router, etc.)</Check>
+    <Check>**Test generation** (Playwright/Vitest)</Check>
+    <Check>**Docs generation** (MDX)</Check>
+    <Check>Priority support</Check>
+    <Check>Lifetime updates — no subscription</Check>
+
+    [Get Pro License →](https://buy.polar.sh/polar_cl_Tnd3ryKUJpYPnXF0kBW1KFHQnoLlxAq2cz9GL3Et0dV)
+  </Tab>
+</Tabs>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Quickstart"
+    icon="play"
+    href="/quickstart"
+  >
+    Get up and running in 5 minutes
+  </Card>
+  <Card
+    title="Installation"
+    icon="download"
+    href="/installation"
+  >
+    Detailed installation guide
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/overview"
+  >
+    Explore all 13 tools
+  </Card>
+  <Card
+    title="Templates"
+    icon="rectangle-code"
+    href="/templates/overview"
+  >
+    Browse story templates
+  </Card>
+</CardGroup>

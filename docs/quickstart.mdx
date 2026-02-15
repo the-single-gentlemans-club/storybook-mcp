@@ -1,0 +1,185 @@
+---
+title: 'Quickstart'
+description: 'Get started with Storybook MCP in under 5 minutes'
+---
+
+## Prerequisites
+
+<AccordionGroup>
+  <Accordion icon="react" title="React 18+">
+    Storybook MCP requires React 18 or higher.
+    ```bash
+    npm install react@^18 react-dom@^18
+    ```
+  </Accordion>
+
+  <Accordion icon="book" title="Storybook 10+">
+    Install Storybook if you haven't already:
+    ```bash
+    npx storybook@latest init
+    ```
+    <Warning>Earlier Storybook versions are not supported</Warning>
+  </Accordion>
+</AccordionGroup>
+
+## Installation
+
+<Steps>
+  <Step title="Install the package">
+    ```bash
+    npm install forgekit-storybook-mcp
+    ```
+  </Step>
+
+  <Step title="Add to your MCP client">
+    <Tabs>
+      <Tab title="Cursor / VS Code">
+        Add to `.cursor/mcp.json` or `.vscode/mcp.json`:
+        ```json
+        {
+          "mcpServers": {
+            "forgekit-storybook": {
+              "command": "npx",
+              "args": ["forgekit-storybook-mcp"]
+            }
+          }
+        }
+        ```
+      </Tab>
+
+      <Tab title="Claude Desktop">
+        Add to `claude_desktop_config.json`:
+        ```json
+        {
+          "mcpServers": {
+            "forgekit-storybook": {
+              "command": "npx",
+              "args": ["forgekit-storybook-mcp"],
+              "cwd": "/path/to/your/project"
+            }
+          }
+        }
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Configure (Optional)">
+    Create `storybook-mcp.config.json` in your project root:
+    ```json
+    {
+      "framework": "chakra",
+      "libraries": [
+        {
+          "name": "ui",
+          "path": "src/components",
+          "storyTitlePrefix": "UI",
+          "importAlias": "@ui"
+        }
+      ]
+    }
+    ```
+    <Info>If omitted, the MCP will auto-detect your setup</Info>
+  </Step>
+
+  <Step title="Start using it!">
+    Ask Claude or your AI assistant:
+
+    <CodeGroup>
+    ```plaintext Example Prompts
+    "List all components without stories"
+    "Generate a story for Button.tsx"
+    "Analyze my Card component"
+    "Create tests for all components"
+    "Check Storybook health"
+    ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+## First Story Generation
+
+Let's generate your first story:
+
+<CodeGroup>
+```bash CLI Command
+npx forgekit-storybook-mcp --init-only
+```
+
+```plaintext AI Prompt
+"Generate a story for my Button component with all variants"
+```
+</CodeGroup>
+
+The MCP will:
+1. ✅ Analyze your Button component
+2. ✅ Extract props and variants
+3. ✅ Detect framework (Chakra/shadcn/etc.)
+4. ✅ Generate story with:
+   - Default story
+   - Size variants
+   - Interactive tests
+   - Accessibility checks
+
+## Verify Installation
+
+<Tabs>
+  <Tab title="MCP Tools">
+    In your AI assistant, type `list_components` to verify the MCP is working.
+
+    You should see:
+    ```json
+    {
+      "components": [...],
+      "total": 24,
+      "withStories": 16,
+      "withoutStories": 8
+    }
+    ```
+  </Tab>
+
+  <Tab title="Health Check">
+    Run a health check:
+    ```plaintext
+    "Check my Storybook setup health"
+    ```
+
+    This will validate:
+    - Required packages
+    - Storybook configuration
+    - Version compatibility
+  </Tab>
+</Tabs>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Configuration"
+    icon="gear"
+    href="/configuration"
+  >
+    Learn about all configuration options
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/overview"
+  >
+    Explore all available tools
+  </Card>
+  <Card
+    title="CLI Flags"
+    icon="terminal"
+    href="/features/cli-flags"
+  >
+    Master command-line options
+  </Card>
+  <Card
+    title="Templates"
+    icon="rectangle-code"
+    href="/templates/overview"
+  >
+    Discover story templates
+  </Card>
+</CardGroup>

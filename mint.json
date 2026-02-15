@@ -1,0 +1,117 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Storybook MCP",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#FF4785",
+    "light": "#FF6A95",
+    "dark": "#FF4785",
+    "anchors": {
+      "from": "#FF4785",
+      "to": "#FF6A95"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Support",
+      "url": "mailto:forgekit@pm.me"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get Pro License",
+    "url": "https://buy.polar.sh/polar_cl_Tnd3ryKUJpYPnXF0kBW1KFHQnoLlxAq2cz9GL3Et0dV"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    },
+    {
+      "name": "Templates",
+      "url": "templates"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "npm Package",
+      "icon": "npm",
+      "url": "https://npmjs.com/package/forgekit-storybook-mcp"
+    },
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/effinrich/storybook-mcp-v2"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Get Started",
+      "pages": [
+        "introduction",
+        "quickstart",
+        "installation",
+        "configuration"
+      ]
+    },
+    {
+      "group": "Features",
+      "pages": [
+        "features/auto-sync",
+        "features/frameworks",
+        "features/cli-flags"
+      ]
+    },
+    {
+      "group": "MCP Client Setup",
+      "pages": [
+        "mcp-setup/cursor",
+        "mcp-setup/claude-desktop",
+        "mcp-setup/programmatic"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/overview",
+        "api-reference/list-components",
+        "api-reference/analyze-component",
+        "api-reference/generate-story",
+        "api-reference/generate-test",
+        "api-reference/generate-docs",
+        "api-reference/validate-story",
+        "api-reference/sync-all",
+        "api-reference/sync-component",
+        "api-reference/get-component-coverage",
+        "api-reference/suggest-stories",
+        "api-reference/check-health"
+      ]
+    },
+    {
+      "group": "Templates",
+      "pages": [
+        "templates/overview",
+        "templates/basic",
+        "templates/with-variants",
+        "templates/with-msw",
+        "templates/with-router",
+        "templates/interactive",
+        "templates/form"
+      ]
+    },
+    {
+      "group": "License",
+      "pages": [
+        "license/pricing",
+        "license/activation"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/effinrich/storybook-mcp-v2",
+    "twitter": "https://twitter.com/effinrich"
+  }
+}
