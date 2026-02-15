@@ -373,6 +373,7 @@ function analyzeDependencies(source: string): DependencyInfo {
   return {
     usesRouter: importsFrom(source, [
       'react-router',
+      'react-router-dom',
       '@tanstack/react-router',
       'next/navigation'
     ]),
