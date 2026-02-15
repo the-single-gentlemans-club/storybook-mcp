@@ -89,7 +89,6 @@ A **Model Context Protocol (MCP) server** for Storybook story generation, compon
 - [Quick Start](#quick-start)
 - [Prerequisites](#prerequisites)
 - [Key Feature: Auto-Sync on Startup](#key-feature-auto-sync-on-startup)
-- [License & Pricing](#license--pricing)
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [CLI Flags](#cli-flags)
@@ -98,6 +97,8 @@ A **Model Context Protocol (MCP) server** for Storybook story generation, compon
 - [Templates](#templates)
 - [Resources](#resources)
 - [Programmatic Usage](#programmatic-usage)
+- [Roadmap](#roadmap)
+- [Related Projects](#related-projects)
 
 ---
 
