@@ -61,20 +61,21 @@ If you don't have Storybook yet:
 npx storybook@latest init
 ```
 
-This scaffolds the `.storybook/` config directory, installs core packages, and adds example stories. **Requires Storybook 10+.** Earlier versions are not supported.
+This scaffolds the `.storybook/` config directory, installs core packages, and adds example stories. **Requires Storybook 10.2+.** Earlier versions are not supported.
 
 ### Required Packages
 
+- `node` ≥ 20
 - `react` ≥ 18
 - `react-dom` ≥ 18
-- `storybook` ≥ 10
-- `@storybook/react` ≥ 10
-- `@storybook/react-vite` ≥ 10 (or `@storybook/react-webpack5` if using Webpack)
+- `storybook` ≥ 10.2
+- `@storybook/react` ≥ 10.2
+- `@storybook/react-vite` ≥ 10.2 (or `@storybook/react-webpack5` if using Webpack)
 
 Install the core Storybook packages:
 
 ```bash
-npm i -D storybook @storybook/react @storybook/react-vite
+npm i -D storybook@^10.2.0 @storybook/react@^10.2.0 @storybook/react-vite@^10.2.0
 ```
 
 ### Recommended Addons
@@ -84,6 +85,7 @@ Some templates and features work best with these addons installed:
 | Addon | Used By | Install |
 |-------|---------|---------|
 | `storybook/test` | Interactive templates, play functions | Included with `storybook@10+` |
+| `@storybook/addon-vitest` | Testing (Vite projects) | `npm i -D @storybook/addon-vitest` |
 | `@storybook/addon-a11y` | Accessibility story generation | `npm i -D @storybook/addon-a11y` |
 | `msw` + `msw-storybook-addon` | `with-msw` template | `npm i -D msw msw-storybook-addon` |
 | `@storybook/addon-interactions` | Interaction testing panel | `npm i -D @storybook/addon-interactions` |

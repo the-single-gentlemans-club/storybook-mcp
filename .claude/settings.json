@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npm version:*)",
-      "Bash(npm run release:patch:*)"
+      "Bash(npm run release:patch:*)",
+      "WebFetch(domain:storybook.js.org)"
     ]
   }
 }

@@ -269,6 +269,9 @@ function generateMainTs(config: SetupConfig): string {
   if (framework === 'tamagui') {
     // Tamagui works best with webpack for now
     frameworkPackage = '@storybook/react-webpack5'
+  } else {
+    // Add Vitest addon for Vite-based projects (SB 10+ recommendation)
+    addons.push('@storybook/addon-vitest')
   }
 
   return `import type { StorybookConfig } from '${frameworkPackage}';
@@ -509,18 +512,20 @@ function getDependencies(config: SetupConfig): Dependencies {
   const { framework } = config
 
   const dev: string[] = [
-    'storybook@^10.0.0',
-    '@storybook/react@^10.0.0',
-    '@storybook/addon-docs@^10.0.0',
-    '@storybook/addon-a11y@^10.0.0',
-    '@storybook/test-runner@^0.24.0'
+    'storybook@^10.2.0',
+    '@storybook/react@^10.2.0',
+    '@storybook/addon-docs@^10.2.0',
+    '@storybook/addon-a11y@^10.2.0'
   ]
 
   // Add framework-specific bundler
   if (framework === 'tamagui') {
-    dev.push('@storybook/react-webpack5@^10.0.0')
+    dev.push('@storybook/react-webpack5@^10.2.0')
+    dev.push('@storybook/test-runner@^0.24.0')
   } else {
-    dev.push('@storybook/react-vite@^10.0.0')
+    dev.push('@storybook/react-vite@^10.2.0')
+    // Vitest addon is recommended for Vite-based projects in SB 10+
+    dev.push('@storybook/addon-vitest@^10.2.0')
   }
 
   // Add Nx-specific if needed
