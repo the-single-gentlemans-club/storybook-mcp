@@ -6,7 +6,17 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(grep:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npx mintlify:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(pkill:*)",
+      "Bash(npx mintlify@latest dev:*)",
+      "Bash(taskkill:*)",
+      "Bash(npx -y mintlify@latest dev)",
+      "Bash(npx nx list:*)",
+      "Bash(npx nx@latest init:*)"
     ]
   }
 }
