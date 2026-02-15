@@ -45,9 +45,9 @@
     "fast-glob": "^3.3.2"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
+    "@types/node": "^20.19.33",
     "tsup": "^8.5.1",
-    "typescript": "^5.3.3",
+    "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   },
   "engines": {
@@ -64,10 +64,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/effinrich/storybook-mcp-v2.git"
+    "url": "git+https://github.com/the-single-gentlemans-club/storybook-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/effinrich/storybook-mcp-v2/issues"
+    "url": "https://github.com/the-single-gentlemans-club/storybook-mcp/issues"
   },
   "homepage": "https://forgekit.cloud"
 }

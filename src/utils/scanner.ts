@@ -142,7 +142,7 @@ function extractComponentName(filePath: string): string | null {
   }
 
   // Skip common non-component files
-  if (NON_COMPONENT_FILES.includes(basename.toLowerCase() as any)) {
+  if (NON_COMPONENT_FILES.includes(basename.toLowerCase())) {
     return null
   }
 

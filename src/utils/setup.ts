@@ -403,7 +403,9 @@ const preview: Preview = {
   },
   decorators: [
     (Story) => (
-      // Replace with your actual config import
+      // IMPORTANT: Replace {} with your actual Tamagui config import
+      // import config from '../tamagui.config'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       <TamaguiProvider config={{} as any} defaultTheme="light">
         <Story />
       </TamaguiProvider>
