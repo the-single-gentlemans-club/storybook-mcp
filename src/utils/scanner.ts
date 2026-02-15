@@ -334,22 +334,32 @@ function inferControlType(type: string): Partial<PropDefinition> {
 }
 
 /**
+ * Check if source imports from any of the given packages
+ */
+function importsFrom(source: string, packages: string[]): boolean {
+  const pattern = packages.map(pkg => pkg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
+  return new RegExp(`from ['"](?:${pattern})`).test(source)
+}
+
+/**
  * Analyze component dependencies
+ * Detects UI frameworks, state management, routing, and other common libraries
  */
 function analyzeDependencies(source: string): DependencyInfo {
   return {
-    usesRouter: /from ['"]react-router|from ['"]@tanstack\/react-router|from ['"]next\/navigation/.test(source),
-    usesReactQuery: /from ['"]@tanstack\/react-query|from ['"]react-query/.test(source),
-    usesChakra: /from ['"]@chakra-ui/.test(source),
-    usesShadcn: /from ['"]@radix-ui\/|from ['"]class-variance-authority/.test(source),
-    usesTamagui: /from ['"]tamagui|from ['"]@tamagui/.test(source),
-    usesGluestack: /from ['"]@gluestack-ui/.test(source),
-    usesReactNative: /from ['"]react-native['"]/.test(source) || /from ['"]expo-/.test(source),
-    usesEmotion: /from ['"]@emotion/.test(source),
-    usesTailwind: /className=.*['"](.*?(flex|grid|p-|m-|bg-|text-).*?)['"]/.test(source),
-    usesFramerMotion: /from ['"]framer-motion/.test(source),
-    usesMSW: /from ['"]msw/.test(source),
-    usesGlobalState: /from ['"]zustand|from ['"]@reduxjs|from ['"]recoil|from ['"]jotai/.test(source),
+    usesRouter: importsFrom(source, ['react-router', '@tanstack/react-router', 'next/navigation']),
+    usesReactQuery: importsFrom(source, ['@tanstack/react-query', 'react-query']),
+    usesChakra: importsFrom(source, ['@chakra-ui']),
+    usesShadcn: importsFrom(source, ['@radix-ui', 'class-variance-authority']),
+    usesTamagui: importsFrom(source, ['tamagui', '@tamagui']),
+    usesGluestack: importsFrom(source, ['@gluestack-ui']),
+    usesReactNative: importsFrom(source, ['react-native', 'expo-']),
+    usesEmotion: importsFrom(source, ['@emotion']),
+    // Simplified Tailwind detection - check for common utility classes
+    usesTailwind: /className=['"][^'"]*\b(flex|grid|p-\d|m-\d|bg-|text-|w-|h-)/.test(source),
+    usesFramerMotion: importsFrom(source, ['framer-motion']),
+    usesMSW: importsFrom(source, ['msw']),
+    usesGlobalState: importsFrom(source, ['zustand', '@reduxjs', 'recoil', 'jotai']),
     otherImports: extractNotableImports(source),
   }
 }
