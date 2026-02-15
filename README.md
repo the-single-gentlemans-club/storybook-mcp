@@ -13,6 +13,56 @@
 
 ---
 
+## License & Pricing
+
+**This tool follows a "Free for Basic / Paid for Pro" model.**
+
+### Free Tier
+
+Perfect for individuals and trying out the tool.
+
+- ✅ List and analyze components
+- ✅ Generate basic stories (`basic` template)
+- ✅ Sync up to 5 components per run
+- ❌ Advanced templates (`with-msw`, `form`, etc.)
+- ❌ Test generation (`generate_test`)
+- ❌ Docs generation (`generate_docs`)
+
+### Pro Tier — $49 (Lifetime License)
+
+For professional teams requiring complete coverage.
+
+- ✅ **Unlimited** sync
+- ✅ **All** templates (Interactive, MSW, Router, etc.)
+- ✅ **Test generation** (Playwright/Vitest)
+- ✅ **Docs generation** (MDX)
+- ✅ Priority support
+- ✅ Lifetime updates — no subscription
+
+**[👉 Get Pro License](https://buy.polar.sh/polar_cl_Tnd3ryKUJpYPnXF0kBW1KFHQnoLlxAq2cz9GL3Et0dV)**
+
+### Activation
+
+**Option 1: Config file**
+
+Add to `storybook-mcp.config.json`:
+
+```json
+{
+  "licenseKey": "your-polar-license-key"
+}
+```
+
+**Option 2: Environment variable**
+
+```bash
+export STORYBOOK_MCP_LICENSE=your-polar-license-key
+```
+
+License keys are UUID format, issued by Polar.sh when you purchase.
+
+---
+
 A **Model Context Protocol (MCP) server** for Storybook story generation, component analysis, and validation.
 
 **Auto-detects** Chakra UI, shadcn/ui, Tamagui, and Gluestack UI. Works with any React project — unrecognized frameworks use vanilla defaults.
@@ -104,56 +154,6 @@ When the MCP server starts, it automatically:
 4. **Caches** component hashes for efficient change detection
 
 This means your Storybook documentation stays in sync with your components automatically.
-
----
-
-## License & Pricing
-
-**This tool follows a "Free for Basic / Paid for Pro" model.**
-
-### Free Tier
-
-Perfect for individuals and trying out the tool.
-
-- ✅ List and analyze components
-- ✅ Generate basic stories (`basic` template)
-- ✅ Sync up to 5 components per run
-- ❌ Advanced templates (`with-msw`, `form`, etc.)
-- ❌ Test generation (`generate_test`)
-- ❌ Docs generation (`generate_docs`)
-
-### Pro Tier — $49 (Lifetime License)
-
-For professional teams requiring complete coverage.
-
-- ✅ **Unlimited** sync
-- ✅ **All** templates (Interactive, MSW, Router, etc.)
-- ✅ **Test generation** (Playwright/Vitest)
-- ✅ **Docs generation** (MDX)
-- ✅ Priority support
-- ✅ Lifetime updates — no subscription
-
-**[👉 Get Pro License](https://buy.polar.sh/polar_cl_Tnd3ryKUJpYPnXF0kBW1KFHQnoLlxAq2cz9GL3Et0dV)**
-
-### Activation
-
-**Option 1: Config file**
-
-Add to `storybook-mcp.config.json`:
-
-```json
-{
-  "licenseKey": "your-polar-license-key"
-}
-```
-
-**Option 2: Environment variable**
-
-```bash
-export STORYBOOK_MCP_LICENSE=your-polar-license-key
-```
-
-License keys are UUID format, issued by Polar.sh when you purchase.
 
 ---
 
