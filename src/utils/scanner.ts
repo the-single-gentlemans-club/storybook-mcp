@@ -14,6 +14,7 @@ import type {
   DependencyInfo,
 } from '../types.js'
 import { NON_COMPONENT_FILES, THRESHOLDS, FILE_EXTENSIONS, STORY_SEARCH_PATHS } from './constants.js'
+import { FileSystemError, ErrorCode } from './errors.js'
 
 /**
  * Scan for all components in configured libraries
@@ -85,7 +86,11 @@ export async function analyzeComponent(
   const fullPath = path.join(config.rootDir, componentPath)
   
   if (!fs.existsSync(fullPath)) {
-    throw new Error(`Component not found: ${componentPath}`)
+    throw new FileSystemError(
+      `Component not found: ${componentPath}`,
+      ErrorCode.COMPONENT_NOT_FOUND,
+      componentPath
+    )
   }
 
   const source = fs.readFileSync(fullPath, 'utf-8')

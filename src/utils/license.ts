@@ -8,6 +8,7 @@ import path from 'node:path'
 import os from 'node:os'
 import type { StorybookMCPConfig } from '../types.js'
 import { POLAR_UPGRADE_URL, LICENSE_CACHE_TTL_MS } from './constants.js'
+import { LicenseError } from './errors.js'
 
 const POLAR_ORG_ID = process.env.POLAR_ORG_ID || 'c39241cb-629a-4beb-8ec8-31820430d5fd'
 const POLAR_API_URL = process.env.POLAR_API_URL || 'https://api.polar.sh'
@@ -251,10 +252,11 @@ export function checkFeatureAccess(feature: Feature, status: LicenseStatus): boo
  */
 export function requireFeature(feature: Feature, status: LicenseStatus): void {
   if (!checkFeatureAccess(feature, status)) {
-    throw new Error(
+    throw new LicenseError(
       `Feature '${feature}' requires a Pro license.\n` +
       `Please add a valid license key to your config or environment variable STORYBOOK_MCP_LICENSE.\n` +
-      `Get your license at: ${POLAR_UPGRADE_URL}`
+      `Get your license at: ${POLAR_UPGRADE_URL}`,
+      feature
     )
   }
 }
