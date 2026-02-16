@@ -267,9 +267,11 @@ function extractProps(source: string, componentName: string): PropDefinition[] {
   const propLines = propsBlock.split('\n').filter(line => line.trim())
 
   for (const line of propLines) {
+    // Trim to handle Windows line endings (\r\n) which leave \r at end of line
+    const trimmedLine = line.trim()
     const propMatch =
-      line.match(/^\s*\/\*\*([^*]*)\*\/\s*(\w+)(\?)?:\s*(.+?)(?:;|$)/s) ||
-      line.match(/^\s*(\w+)(\?)?:\s*(.+?)(?:;|$)/)
+      trimmedLine.match(/^\s*\/\*\*([^*]*)\*\/\s*(\w+)(\?)?:\s*(.+?)(?:;|$)/s) ||
+      trimmedLine.match(/^\s*(\w+)(\?)?:\s*(.+?)(?:;|$)/)
 
     if (propMatch) {
       const hasJsDoc = propMatch.length === 5
@@ -310,11 +312,11 @@ function inferControlType(type: string): Partial<PropDefinition> {
     return { controlType: 'text' }
   }
 
-  // Union of string literals
+  // Union of string literals (supports both single and double quotes)
   const unionMatch = type.match(
     /^["']([^"']+)["'](?:\s*\|\s*["']([^"']+)["'])+$|^['"](.+?)['"](?:\s*\|\s*['"](.+?)['"])*$/
   )
-  if (unionMatch || (type.includes("'") && type.includes('|'))) {
+  if (unionMatch || ((type.includes("'") || type.includes('"')) && type.includes('|'))) {
     const options = type
       .split('|')
       .map(s => s.trim().replace(/['"]/g, ''))
