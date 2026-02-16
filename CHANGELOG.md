@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.10.5] - 2026-02-16
+
+### Added
+
+- **React Native Web auto-configuration** - Automatically generates `vite.config.ts` with React Native Web aliasing for React Native/Expo projects
+- **App directory story paths** - Stories in `app/**/*.stories.*` are now automatically included for React Native/Expo projects using Expo Router
+
+### Changed
+
+- Setup command now detects React Native/Expo projects and configures appropriate tooling
+- Better out-of-the-box experience for React Native developers using Storybook
+
 ## [0.10.4] - 2026-02-16
 
 ### Fixed

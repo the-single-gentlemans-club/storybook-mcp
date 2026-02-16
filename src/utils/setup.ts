@@ -259,10 +259,28 @@ function generateMainTs(config: SetupConfig): string {
     '@storybook/addon-a11y',
   ]
 
-  // Stories glob — use a single pattern that covers both stories and MDX
+  // Detect if this is a React Native/Expo project
+  const packagePath = path.join(config.rootDir, 'package.json')
+  let isReactNative = false
+  if (fs.existsSync(packagePath)) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf-8'))
+      const deps = { ...pkg.dependencies, ...pkg.devDependencies }
+      isReactNative = !!(deps['react-native'] || deps['expo'])
+    } catch {
+      // Ignore errors
+    }
+  }
+
+  // Stories glob — include app directory for React Native/Expo projects
   const storiesGlob = [
     '../src/**/*.@(mdx|stories.@(js|jsx|ts|tsx))',
   ]
+
+  // Add app directory for Expo Router / React Native projects
+  if (isReactNative) {
+    storiesGlob.push('../app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))')
+  }
 
   // Determine the framework package
   let frameworkPackage = '@storybook/react-vite'
@@ -417,6 +435,40 @@ const preview: Preview = {
 };
 
 export default preview;
+`
+}
+
+/**
+ * Generate vite.config.ts with React Native Web aliasing
+ */
+function generateViteConfig(): string {
+  return `import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      // Alias React Native to React Native Web for Storybook
+      'react-native': 'react-native-web',
+      '@': resolve(__dirname, './src'),
+    },
+    extensions: [
+      '.web.tsx',
+      '.web.ts',
+      '.web.jsx',
+      '.web.js',
+      '.tsx',
+      '.ts',
+      '.jsx',
+      '.js',
+    ],
+  },
+  optimizeDeps: {
+    include: ['react-native-web'],
+  },
+})
 `
 }
 
@@ -761,6 +813,47 @@ export async function runSetup(
       )
     } else {
       console.log(`  ⏭️  Scripts already exist in package.json`)
+    }
+  }
+
+  // Generate vite.config.ts for React Native projects
+  const packagePath2 = path.join(rootDir, 'package.json')
+  let isReactNative = false
+  if (fs.existsSync(packagePath2)) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(packagePath2, 'utf-8'))
+      const deps = { ...pkg.dependencies, ...pkg.devDependencies }
+      isReactNative = !!(deps['react-native'] || deps['expo'])
+    } catch {
+      // Ignore errors
+    }
+  }
+
+  if (isReactNative) {
+    const viteConfigPath = path.join(rootDir, 'vite.config.ts')
+    const viteConfigExists = fs.existsSync(viteConfigPath)
+
+    if (!viteConfigExists || force) {
+      const viteConfigContent = generateViteConfig()
+      if (!dryRun) {
+        fs.writeFileSync(viteConfigPath, viteConfigContent)
+      }
+      result.filesCreated.push('vite.config.ts')
+      console.log(
+        `  📄 ${viteConfigExists ? 'Overwrote' : 'Created'} vite.config.ts (React Native Web aliasing)`
+      )
+
+      // Add react-native-web to dependencies if not present
+      const pkg = JSON.parse(fs.readFileSync(packagePath2, 'utf-8'))
+      const deps = { ...pkg.dependencies, ...pkg.devDependencies }
+      if (!deps['react-native-web']) {
+        result.dependencies.dev.push('react-native-web@^0.21.2')
+        console.log(`  💡 Note: Add react-native-web to your dependencies for Storybook`)
+      }
+    } else {
+      console.log(
+        `  ⏭️  Skipped vite.config.ts (already exists, use --force to overwrite)`
+      )
     }
   }
 
