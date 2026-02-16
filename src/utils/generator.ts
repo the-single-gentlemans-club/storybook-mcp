@@ -235,12 +235,50 @@ function buildDefaultArgs(props: PropDefinition[]): Record<string, unknown> {
   const args: Record<string, unknown> = {}
 
   for (const prop of props) {
+    // Priority 1: Explicit default value from code
     if (prop.defaultValue !== undefined) {
       args[prop.name] = prop.defaultValue
-    } else if (prop.controlOptions && prop.controlOptions.length > 0) {
+    }
+    // Priority 2: First option from union types
+    else if (prop.controlOptions && prop.controlOptions.length > 0) {
       args[prop.name] = prop.controlOptions[0]
-    } else if (prop.name === 'children') {
+    }
+    // Priority 3: Sensible defaults based on prop name and type
+    else if (prop.name === 'children') {
       args[prop.name] = 'Content'
+    }
+    else if (prop.name === 'title' && prop.type === 'string') {
+      args[prop.name] = 'Title'
+    }
+    else if (prop.name === 'label' && prop.type === 'string') {
+      args[prop.name] = 'Label'
+    }
+    else if (prop.name === 'placeholder' && prop.type === 'string') {
+      args[prop.name] = 'Enter text...'
+    }
+    else if (prop.name === 'text' && prop.type === 'string') {
+      args[prop.name] = 'Text'
+    }
+    else if (prop.name === 'value' && prop.type === 'string') {
+      args[prop.name] = 'Value'
+    }
+    else if (prop.name === 'name' && prop.type === 'string') {
+      args[prop.name] = 'Name'
+    }
+    else if (prop.name === 'id' && prop.type === 'string') {
+      args[prop.name] = 'example-id'
+    }
+    else if (prop.type === 'boolean' && !prop.required) {
+      // Optional booleans default to false
+      args[prop.name] = false
+    }
+    else if (prop.type === 'number' && !prop.required) {
+      // Optional numbers: use 0 for generic, 1 for count/index props
+      if (prop.name.includes('count') || prop.name.includes('index') || prop.name.includes('Index')) {
+        args[prop.name] = 1
+      } else {
+        args[prop.name] = 0
+      }
     }
   }
 

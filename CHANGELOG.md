@@ -4,7 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.10.1] - 2026-02-15
+## [0.10.4] - 2026-02-16
+
+### Fixed
+
+- **Critical:** Fixed prop extraction failing on Windows due to CRLF line endings - props were not being extracted, resulting in completely empty story files with no args
+- Fixed union type detection not recognizing double-quote string literals (`"light" | "medium"`)
+- Improved default args generation with sensible fallbacks for common prop names (title, label, placeholder, text, value, name, id)
+- Added better defaults for optional boolean and number props
+
+### Improved
+
+- Trim prop lines before regex matching to handle both Windows (`\r\n`) and Unix (`\n`) line endings
+- Enhanced `buildDefaultArgs` to provide comprehensive default values for better out-of-the-box story rendering
+
+## [0.10.1] - 2026-02-16
 
 ### Fixed
 
