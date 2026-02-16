@@ -104,6 +104,7 @@ All notable changes to this project will be documented in this file.
 ## [0.8.7] - 2026-02-13
 
 ### Fixed
+
 - **Free tier sync limit was never enforced** — free users got unlimited Pro features since launch. Now correctly capped at 5 components.
 - Free tier no longer generates tests or docs in CLI startup path
 - Stale upgrade URL in initializer ("coming soon" → Polar checkout link)
@@ -111,12 +112,14 @@ All notable changes to this project will be documented in this file.
 - Generated tests now wrap in correct framework provider (Chakra/Gluestack/Tamagui)
 
 ### Added
+
 - `POLAR_UPGRADE_URL` centralized in `src/utils/constants.ts`
 - `POLAR_API_URL` env var for switching between sandbox/production Polar APIs
 - `test` and `test:watch` scripts in package.json
 - 124 passing tests across 10 test files
 
 ### Changed
+
 - SB10-only — dropped all pre-SB10 compatibility code
 - `tags: []` default (prevents duplicate pages with explicit MDX docs)
 - MDX imports from `@storybook/addon-docs/blocks`
@@ -125,6 +128,7 @@ All notable changes to this project will be documented in this file.
 ## [0.7.0] - 2026-02-11
 
 ### Added
+
 - **Preflight health check** — automatically checks for missing packages, outdated configs, and version mismatches on startup
 - New `check_health` MCP tool — run health checks on demand from your editor
 - **Prerequisites section** in README — clear guidance on required Storybook packages before install
@@ -133,34 +137,40 @@ All notable changes to this project will be documented in this file.
 - Actionable install commands in preflight output
 
 ### Fixed
+
 - Removed deprecated `argTypesRegex` from all generated preview templates (SB10 auto-detects actions)
 - Added `@storybook/react-vite` to required packages list — was missing, causing `main.ts` framework errors
 
 ### Changed
+
 - All generated configs now target Storybook 10+ by default
 - Preview templates no longer include `actions.argTypesRegex` parameter
 
 ## [0.6.0] - 2026-02-10
 
 ### Changed
+
 - Switched licensing provider from LemonSqueezy to Polar.sh
-- Updated contact email to forgekit@pm.me
+- Updated contact email to <forgekit@pm.me>
 
 ## [0.5.2] - 2026-02-10
 
 ### Fixed
+
 - Updated all Storybook imports and dependencies for SB10 consolidated packages
 - Storybook v10 support in `storybookVersion` config field
 
 ## [0.5.0] - 2026-02-09
 
 ### Added
+
 - Storybook v10 types and configuration support
 - `storybookVersion` config option
 
 ## [0.4.1] - 2026-02-08
 
 ### Added
+
 - Initial public npm release as `forgekit-storybook-mcp`
 - `--setup` command for scaffolding `.storybook/` config
 - Auto-detection of UI framework (Chakra, shadcn, Tamagui, Gluestack, React Native)
