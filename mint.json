@@ -53,6 +53,17 @@
       "pages": ["introduction", "quickstart", "installation", "configuration"]
     },
     {
+      "group": "ForgeKit Context — Planning",
+      "pages": [
+        "planning/overview",
+        "planning/market-analysis",
+        "planning/architecture",
+        "planning/product-shell",
+        "planning/roadmap-60-day",
+        "planning/go-to-market"
+      ]
+    },
+    {
       "group": "Features",
       "pages": [
         "features/auto-sync",

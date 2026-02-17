@@ -1,0 +1,168 @@
+---
+title: "Product Shell"
+description: "CLI, status page, config UI, and customer onboarding flow"
+---
+
+# Product Shell
+
+## Day 60 Scope
+
+The product shell at day 60 is intentionally minimal. Three components only:
+
+```
+1. CLI          → setup, sync, daemon management
+2. Status page  → static generated HTML, shows current state
+3. Config UI    → minimal web page for Figma OAuth + settings
+```
+
+No full SaaS dashboard at day 60. Early access customers tolerate CLI setup when the value is immediately obvious.
+
+## Customer Setup Flow
+
+Total time target: **under 10 minutes**.
+
+```bash
+# Step 1: Install
+npm install -g forgekit-context
+
+# Step 2: Authenticate
+forgekit auth
+# Opens browser → Figma OAuth → GitHub OAuth → returns to terminal
+# "Connected: Figma (Acme Design) + GitHub (acme/frontend)"
+
+# Step 3: Initialize
+forgekit init
+# Auto-detects component dir, stories dir, test dir
+# "Config saved to .forgekit/config.json"
+
+# Step 4: First sync
+forgekit sync
+# Scanning Figma... 47 components found
+# Scanning codebase... 39 components found
+# Matching... 31 matched, 8 design-only, 8 code-only
+# "Sync complete in 12s"
+
+# Step 5: Start daemon
+forgekit daemon start
+# "Daemon started (PID 4821). Watching for changes."
+
+# Step 6: Connect to AI tool
+forgekit install claude
+# "Added ForgeKit to Claude Desktop config. Restart Claude Desktop."
+```
+
+## Full CLI Reference
+
+```
+Authentication
+  forgekit auth              Connect Figma + GitHub accounts
+  forgekit auth status       Show connected accounts
+  forgekit auth logout       Remove credentials
+
+Project
+  forgekit init              Initialize project config
+  forgekit sync              Full sync (Figma + codebase)
+  forgekit sync --figma      Figma only
+  forgekit sync --code       Codebase only
+
+Daemon
+  forgekit daemon start      Start background watcher
+  forgekit daemon stop       Stop daemon
+  forgekit daemon status     Health + last sync times
+  forgekit daemon restart    Restart daemon
+
+Reporting
+  forgekit status            Quick state summary in terminal
+  forgekit report            Full gap report in terminal
+  forgekit report --export   Export gap report as markdown
+
+AI Tool Integration
+  forgekit install claude    Add MCP to Claude Desktop config
+  forgekit install cursor    Add MCP to Cursor config
+  forgekit install windsurf  Add MCP to Windsurf config
+
+Maintenance
+  forgekit upgrade           Check for updates, upgrade CLI
+```
+
+## Terminal Status Output
+
+```
+ForgeKit Status — Acme Design System
+Last synced: 4 minutes ago  •  Daemon: running
+
+OVERVIEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+47 components total
+31 in sync          ████████████████░░░░  66%
+ 8 design only      ████░░░░░░░░░░░░░░░░  17%
+ 8 code only        ████░░░░░░░░░░░░░░░░  17%
+ 6 drifted          ██░░░░░░░░░░░░░░░░░░  13%
+
+TOKENS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+64 tokens defined
+60 in sync
+ 4 stale (code behind Figma)
+
+COVERAGE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+33/39 components have stories  (85%)
+28/39 components have tests    (72%)
+
+RECENT CHANGES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 2h ago  Button: ghost variant added in Figma
+ 1d ago  color.primary.600: token value updated
+ 3d ago  Modal: drift resolved
+```
+
+## Generated Status Page
+
+Every sync regenerates a static `forgekit-status/index.html`. No server required. Teams can:
+- Open it locally in a browser
+- Commit it to the repo (design system health visible to whole org)
+- Eventually: host it as a team dashboard
+
+Same data as the terminal output but in a rich visual format with color-coded health indicators, component tables, and change history.
+
+## Config UI (Minimal Server)
+
+Single-page app on Vercel. Handles three things only:
+
+1. **Figma OAuth callback** — exchanges auth code for token, writes to local config
+2. **Settings form** — poll interval, directory paths, stale threshold
+3. **Account management** — disconnect accounts, rotate tokens
+
+**Critical**: The server stores nothing. Tokens live on the user's machine only.
+
+### OAuth Flow
+
+```
+User runs: forgekit auth
+  → CLI starts local server on port 9847
+  → Opens browser to forgekit.cloud/auth/figma
+  → Figma OAuth flow completes
+  → Figma redirects to forgekit.cloud/auth/figma/callback
+  → Server exchanges code for token
+  → Redirects to localhost:9847/callback with token
+  → CLI receives token, encrypts with AES-256, writes to config
+  → Browser shows "Connected. You can close this tab."
+```
+
+## Day 60 → Day 120 Roadmap
+
+What the shell grows into after beta validation:
+
+| Feature | When | Trigger |
+|---------|------|---------|
+| Web dashboard (real) | Day 90 | 10+ active users need it |
+| VS Code extension | Day 90 | Devs want it inside editor |
+| Team accounts | Day 120 | First team-tier customers |
+| Multi-repo support | Day 120 | Agency customers |
+| Slack notifications | Day 150 | Teams want async change alerts |
+| Webhook support | Day 150 | Pro tier launch |
+
+---
+
+*See [60-Day Roadmap](/planning/roadmap-60-day) for the full build plan.*

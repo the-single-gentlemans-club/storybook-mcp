@@ -1,0 +1,187 @@
+---
+title: "60-Day Build Roadmap"
+description: "Week-by-week plan to ship ForgeKit Context v1 and reach first 5 paying customers"
+---
+
+# 60-Day Build Roadmap
+
+## What Ships at Day 60
+
+A single MCP server — **ForgeKit Context** — that a startup connects to their Figma and codebase once. From that point, every team member uses Claude with full design/code awareness.
+
+No full web dashboard at day 60. Early access customers will tolerate CLI setup when the demo closes in under 10 minutes.
+
+## Success Criteria
+
+<CardGroup cols={2}>
+  <Card title="Technical" icon="code">
+    - `forgekit-context` published on npm
+    - Works with any Figma file + React/Storybook codebase
+    - 6 MCP tools covering dev, design, and PM use cases
+    - CLI setup completing in under 10 minutes
+    - Daemon running stably for 48+ hours without restart
+  </Card>
+  <Card title="Business" icon="chart-line">
+    - 5 startups in active use
+    - Each user making 5+ MCP tool calls per day (habit signal)
+    - At least 3 paying at $29/mo
+    - Testimonials captured from 2+ users
+    - Clear v2 feature priorities from real feedback
+  </Card>
+</CardGroup>
+
+## Week-by-Week Plan
+
+### Week 1–2: Unified State Schema
+
+Define the data model everything else builds on. No UI, no integrations — just types and fixtures.
+
+**Deliverables:**
+- `ComponentSpec`, `DesignSystemState`, `DriftDetail` types defined
+- Test fixtures for 3 mock components (one matched, one design-only, one drifted)
+- `state.json` schema finalized and documented
+- Manual mapping file format (`mapping.json`) specified
+
+**Why this first:** Everything downstream depends on this schema. Getting it right now prevents painful refactors in weeks 7–10.
+
+---
+
+### Week 3–4: Figma Ingestion Pipeline
+
+Using the existing Figma MCP, build the ingestion and normalization layer.
+
+**Deliverables:**
+- Pull all components from a Figma file by file ID
+- Extract variants, props, token usage, last-modified timestamps
+- Normalize into `ComponentSpec[]` with `source: 'figma'`
+- Cache to `.forgekit/figma-cache.json`
+- Handles Figma API rate limits gracefully
+
+**Risk:** Figma component naming inconsistencies in real files. Recruit one beta user with a real Figma file to test against during this week.
+
+---
+
+### Week 5–6: Code Ingestion + Merging
+
+Using existing Storybook MCP and React MCP, build the code-side ingestion.
+
+**Deliverables:**
+- Scan React component files, extract component names and props
+- Check for corresponding Storybook stories
+- Check for test files
+- Normalize into `ComponentSpec[]` with `source: 'code'`
+- Merge with Figma state using four-layer matching algorithm
+- Set `source: 'both'`, `status`, and `confidence` scores on merged results
+
+**Risk:** Component name matching is the hardest part of the whole system. Real messy codebases will break assumptions. Have at least one beta user's codebase to test against by end of week 6.
+
+---
+
+### Week 7–8: Gap Analysis Engine
+
+The feature that closes deals. Given the merged state, produce structured and natural language gap reports.
+
+**Deliverables:**
+- `analyzeGaps()` function returning structured `GapReport`
+- Three drift detectors: hardcoded tokens, stale token values, variant drift
+- Natural language summary generator
+- Output readable by a PM with no technical context
+- Change log system (append-only, timestamped)
+
+**Demo validation:** Show the output to a non-technical person. If they immediately understand it, it's done. If they need explanation, rewrite the summaries.
+
+---
+
+### Week 9–10: MCP Tools Layer
+
+The six tools Claude calls. This is the product interface.
+
+| Tool | What It Does |
+|------|-------------|
+| `get_design_system_state` | Full context dump |
+| `get_gaps` | Gap report in natural language |
+| `get_component` | Deep dive on one component |
+| `get_missing_components` | Unbuilt designs, prioritized |
+| `get_drifted_components` | Built components that no longer match Figma |
+| `onboard` | Role-tailored design system orientation |
+
+**Deliverables:**
+- All 6 tools implemented, tested, and documented
+- `onboard` tool working for all 4 roles (developer, designer, pm, agent)
+- Tool descriptions tuned for Claude to use them correctly without prompting
+- End-to-end test: real Figma file + real codebase → all 6 tools return accurate output
+
+---
+
+### Week 11: CLI + Setup Experience
+
+The customer onboarding layer. The 10-minute setup is a hard requirement.
+
+**Deliverables:**
+- `forgekit auth` with Figma OAuth flow
+- `forgekit init` with auto-detection of project structure
+- `forgekit sync` with progress output
+- `forgekit daemon start/stop/status`
+- `forgekit install claude` (writes Claude Desktop config entry)
+- `forgekit install cursor` (writes Cursor config entry)
+- `forgekit status` terminal output with color-coded health
+
+**Test:** Walk a developer who has never seen ForgeKit through setup with only the README. Time it. Must be under 10 minutes.
+
+---
+
+### Week 12: Polish, Demo, Launch Prep
+
+**Deliverables:**
+- Bug fixes from internal testing
+- 90-second demo video recorded (no voiceover, output speaks)
+- Landing page live (single page, email capture)
+- README complete with setup instructions + demo GIF
+- Published to npm as `forgekit-context`
+- 5 beta customers onboarded personally (30-min setup calls)
+
+---
+
+## The Three Demo Moments
+
+These are the scenes in the demo video and the moments that close deals on setup calls.
+
+<Steps>
+  <Step title="The Gap Report">
+    **User**: "What in our design system isn't built yet?"
+
+    **Claude**: Lists 8 unbuilt components with Figma links and estimated complexity, in plain English.
+
+    **Why it works**: Every startup founder has wondered this. Nobody can answer it instantly. You just did.
+  </Step>
+  <Step title="The Drift Alert">
+    **User**: "What's drifted from the design this week?"
+
+    **Claude**: "Button's hover state uses `#2563eb` directly — should be `var(--color-primary-600)`. Modal spacing changed in Figma 3 days ago, code not updated."
+
+    **Why it works**: This is specific, accurate, and actionable. Generic tools can't do this.
+  </Step>
+  <Step title="The Onboarding">
+    **User**: "I'm new here, walk me through the design system."
+
+    **Claude**: Full structured walkthrough — component categories, token system, patterns, what to know before touching anything.
+
+    **Why it works**: This one sells to engineering managers and founders who feel the onboarding pain every time they hire.
+  </Step>
+</Steps>
+
+---
+
+## Key Risks
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| Component matching accuracy too low | High | High | Test against 3 real codebases in weeks 5–6 |
+| Figma API rate limiting | Medium | Medium | Cache aggressively, exponential backoff |
+| Daemon stability on Windows/Mac | Medium | High | Test both platforms, use PM2 or native process manager |
+| MCP tool descriptions not triggering correctly | Low | Medium | Iterate tool descriptions based on Claude's actual behavior |
+| Beta users not engaging | Low | High | Personal onboarding calls, weekly check-ins |
+
+---
+
+*See [Go-to-Market](/planning/go-to-market) for how to land the first 5 customers.*

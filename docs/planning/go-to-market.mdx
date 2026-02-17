@@ -1,0 +1,217 @@
+---
+title: "Go-to-Market Strategy"
+description: "How to find, onboard, and convert the first 5 paying customers"
+---
+
+# Go-to-Market Strategy
+
+## The Mindset
+
+You don't launch to get 5 customers. You **find** 5 customers and build with them.
+
+The product shipped at day 60 is not for the internet. It's for 5 specific people whose exact pain you understand. Everything in this GTM is oriented toward that.
+
+## Target Customer Profile
+
+```
+✓ 2–10 person startup
+✓ Has at least one designer + one developer
+✓ Shares a Figma file they actively maintain
+✓ Has a React codebase
+✓ Feels the design/dev gap pain (already looking for solutions)
+✗ Not: enterprises (too slow to close), solo devs without Figma (no design layer)
+```
+
+## Positioning
+
+**Not**: "design-to-code tool" (saturated, baggage from bad generators)
+
+**Not**: "design system sync" (too vague, nobody knows what they're buying)
+
+**Yes**: "Your AI finally knows your design system"
+
+The positioning locks onto the AI angle because:
+1. It's differentiated — no competitor can say this
+2. It's immediately understood by anyone using Claude or Cursor
+3. It creates curiosity instead of comparison
+
+### The One-Line Pitch
+
+> *"ForgeKit tells your AI exactly what's been built and what hasn't — so your whole team stops guessing."*
+
+## Pre-Launch (Weeks 1–2, Runs Parallel to Building)
+
+Before writing a line of product code, talk to 10 startup founders or leads.
+
+**The goal**: Not to sell. To hear their exact words describing the pain.
+
+**The question**: *"What's the most painful part of keeping your Figma and code in sync?"*
+
+**Where to find them**:
+- Your existing network (fastest, highest conversion)
+- Twitter/X mutuals who post about design systems or Storybook
+- Figma Community — people who publish community files care about design systems
+- Storybook Discord
+- Design Systems Slack (design.systems/slack)
+
+**What you'll hear** (and what it becomes in copy):
+- *"I never know what's actually been built"* → "Know exactly what's built and what's not"
+- *"New devs take forever to understand our components"* → "New hires productive on day one"
+- *"We keep rebuilding stuff that already exists"* → "Stop rebuilding what you already have"
+
+## The Demo Video
+
+One 90-second screen recording. No voiceover. The output speaks.
+
+```
+Scene 1 (10s):  Terminal — forgekit sync running, 47 components found
+Scene 2 (20s):  Claude — "what's not built yet?"
+                Claude lists unbuilt components with Figma links
+Scene 3 (25s):  Claude — "what drifted from Figma this week?"
+                Claude: specific component names, token mismatches
+Scene 4 (25s):  Claude — "I'm new here, walk me through the design system"
+                Claude gives full structured onboarding
+Scene 5 (10s):  Terminal — forgekit status with health metrics
+```
+
+**The launch tweet:**
+
+> *"I got tired of my team not knowing what was built vs designed. So I built this."*
+> [video]
+
+Tag nobody. Don't explain it. Let people ask in the replies.
+
+## Channel Strategy
+
+### Phase 1 (Weeks 4–6): Direct Outreach
+
+Send 20 DMs to startup founders/leads you already follow. The message:
+
+```
+"Hey — building something that might be relevant to you.
+
+It's an MCP that gives Claude complete awareness of your design
+system — Figma components, what's built, what's drifted, what's
+missing.
+
+Basically answers 'what do we have and what's not built yet'
+instantly. PM, dev, and design all get the same answer.
+
+Would you try it with your actual codebase? Free, 30-min setup
+call, I handle everything. Honest feedback is all I want."
+```
+
+Expect 4–6 yes replies from 20 sends. Those become your beta cohort.
+
+### Phase 2 (Weeks 4–8): Communities
+
+| Community | What to Post | Timing |
+|-----------|-------------|--------|
+| Design Systems Slack | "Built something that gaps your Figma/code — feedback?" | Week 4 |
+| Storybook Discord | "ForgeKit Context MCP — Storybook-aware context for Claude" | Week 5 |
+| Figma Community | Comment on popular component files | Week 6 |
+| Twitter/X second post | Real quote from a beta user | Week 6 |
+| Dev.to / Hashnode | Technical deep-dive: matching algorithm | Week 7 |
+
+### Phase 3 (Week 12+): Public Launch
+
+ProductHunt after beta feedback is incorporated. Not before. Launching on ProductHunt with rough edges kills momentum.
+
+## Beta Cohort Structure
+
+5 startups. They get:
+
+```
+✓ Free access forever (this cohort only)
+✓ 30-minute onboarding call (done together)
+✓ Weekly 15-minute check-in for 4 weeks
+✓ Direct Slack/Discord channel
+✓ Logo on landing page (optional)
+✓ Price lock when paid tier launches
+```
+
+You get:
+
+```
+✓ Real messy codebases breaking your matching algorithm
+✓ Real Figma files with naming inconsistencies
+✓ Workflow patterns you didn't design for
+✓ Testimonials and case studies
+✓ Referrals (startups talk to each other constantly)
+```
+
+The first 5 are not customers. They are co-builders. Treat them that way.
+
+## Landing Page (Day 55–60)
+
+Single page. Five sections:
+
+<Steps>
+  <Step title="Hero">
+    **Headline**: "Your AI finally knows your design system"
+
+    **Subhead**: "ForgeKit gives Claude complete awareness of your Figma and codebase — so your whole team stops guessing."
+
+    **CTA**: "Join the beta" → email capture
+  </Step>
+  <Step title="The Problem">
+    Three panels. Use the exact words heard in customer conversations:
+    - "Designed but not built"
+    - "Drifted without anyone noticing"
+    - "New hire took 3 weeks to understand the components"
+  </Step>
+  <Step title="Demo Video">
+    The 90-second recording. Full width. Autoplay muted.
+  </Step>
+  <Step title="How It Works">
+    Three steps: Connect Figma → Connect codebase → Ask Claude anything
+  </Step>
+  <Step title="Beta CTA">
+    "We're onboarding 20 teams this month."
+
+    Email capture → you personally respond within 24 hours.
+
+    No pricing page. "Beta — reach out for access" creates scarcity without deception.
+  </Step>
+</Steps>
+
+## Pricing at Launch
+
+One price. No tiers yet.
+
+```
+Beta price: $29/mo
+Everything included.
+Cancel anytime.
+Price locks in forever for beta users.
+```
+
+**Why**: Simple. Creates urgency. Rewards early adopters. Gives a clean revenue signal — if people won't pay $29, pricing isn't the problem, product is.
+
+Introduce tiers at v2 once you know which features teams use vs solo devs.
+
+## The Metrics That Matter
+
+Ignore vanity metrics. Track only:
+
+| Timeframe | Metric | Target |
+|-----------|--------|--------|
+| Week 1–4 | Conversations started | 20+ |
+| Week 5–8 | Active beta installs | 5 |
+| Week 8–12 | Daily MCP tool calls per user | 5+ (habit signal) |
+| Week 12+ | Conversion to paid | 3/5 beta → paying |
+
+**The critical signal**: If daily active calls per user is below 5, the product isn't sticky enough yet. Fix that before charging.
+
+## Longer-Term GTM (Post-Beta)
+
+Once 10+ teams are active:
+
+- **Agency channel**: Agencies managing design systems for clients are high-value. One agency = multiple client projects at higher contract value.
+- **Design system influencers**: People like Brad Frost, Zack Leatherman, or Storybook core team members reaching out matters more than ads.
+- **Integration partnerships**: Getting listed in Figma's plugin directory, Storybook's ecosystem page, or Cursor's MCP registry = compounding inbound.
+- **Enterprise inbound**: If the tool is working for startups, enterprise design system teams will find it. Have a "contact us" path ready.
+
+---
+
+*See [Product Overview](/planning/overview) to return to the full vision.*

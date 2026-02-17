@@ -1,0 +1,265 @@
+---
+title: "Technical Architecture"
+description: "Data model, matching algorithm, drift detection, sync mechanism, and MCP tools"
+---
+
+# Technical Architecture
+
+## System Overview
+
+```
+ForgeKit Context MCP (orchestrator)
+├── Figma MCP         → reads design components, tokens, variants
+├── Storybook MCP     → reads/generates stories and documentation
+├── React MCP         → reads component structure and props
+└── .forgekit/        → local state cache and config
+    ├── config.json
+    ├── state.json
+    ├── state.lock
+    └── mapping.json  (manual overrides)
+```
+
+## Core Data Model
+
+Everything in the system resolves to a `ComponentSpec` — the unified representation of a component across design and code:
+
+```typescript
+interface ComponentSpec {
+  name: string
+  source: 'figma' | 'code' | 'both'
+  figma?: {
+    variants: string[]
+    tokens: string[]
+    lastUpdated: Date
+    figmaNodeId: string
+  }
+  code?: {
+    filePath: string
+    props: PropDef[]
+    hasStory: boolean
+    hasTests: boolean
+  }
+  status: 'in-sync' | 'drifted' | 'design-only' | 'code-only'
+  drift?: DriftDetail[]
+  matchType: 'exact' | 'normalized' | 'fuzzy' | 'manual' | 'unmatched'
+  confidence: number  // 0–1
+}
+
+interface DesignSystemState {
+  components: ComponentSpec[]
+  tokens: TokenSpec[]
+  lastSynced: Date
+  figmaLastModified: string
+  version: string
+  summary: StateSummary
+  changes: ChangeEntry[]
+}
+```
+
+## Component Matching Algorithm
+
+The hardest problem: matching `Button` in Figma to `ButtonComponent`, `Btn`, or `src/components/ui/button.tsx` in code.
+
+**Four-layer matching, first match wins:**
+
+```typescript
+async function matchComponents(
+  figmaComponents: FigmaComponent[],
+  codeComponents: CodeComponent[]
+): Promise<ComponentSpec[]> {
+  const results: ComponentSpec[] = []
+  const unmatched = { figma: [...figmaComponents], code: [...codeComponents] }
+
+  applyExactMatch(unmatched, results)       // "Button" → "Button"
+  applyNormalizedMatch(unmatched, results)  // "IconButton" → "icon-button.tsx"
+  applyFuzzyMatch(unmatched, results)       // "DialogModal" → "Modal" (0.8 threshold)
+  applyManualMapping(results)               // .forgekit/mapping.json always wins
+
+  // Remaining = design-only or code-only
+  unmatched.figma.forEach(c => results.push({ ...c, source: 'figma' }))
+  unmatched.code.forEach(c => results.push({ ...c, source: 'code' }))
+
+  return results
+}
+```
+
+**Normalization (does the heavy lifting):**
+
+```typescript
+function normalizeName(name: string): string {
+  return name
+    .replace(/component|wrapper|container|base|root/gi, '')
+    .replace(/([A-Z])/g, ' $1')    // PascalCase → words
+    .replace(/[-_./]/g, ' ')        // separators → spaces
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+// "IconButtonComponent" → "icon button"
+// "icon-button.tsx"    → "icon button"
+```
+
+**Manual mapping file** for cases the algorithm can't handle:
+
+```json
+// .forgekit/mapping.json
+{
+  "overrides": [
+    {
+      "figma": "Navigation/Top Bar",
+      "code": "src/components/layout/Header.tsx",
+      "reason": "Named differently for historical reasons"
+    }
+  ],
+  "ignore": [
+    "figma:Utilities/Spacer",
+    "code:src/components/internal/DevOnly.tsx"
+  ]
+}
+```
+
+Low-confidence matches surface as "Review needed" in the status output. User confirmations auto-update the mapping file.
+
+## Drift Detection
+
+Three types of drift, each with separate detection logic:
+
+### Type 1: Hardcoded Value That Should Be a Token
+
+```typescript
+// Figma token: color.primary.600 = #2563eb
+// Code: color: "#2563eb"  ← should be var(--color-primary-600)
+
+function detectHardcodedTokens(code: string, tokens: DesignToken[]): DriftDetail[]
+```
+
+### Type 2: Token Value Stale in Code
+
+```typescript
+// Figma token: color.primary.600 = #1d4ed8  (brand refresh)
+// CSS: --color-primary-600: #2563eb          (not updated)
+
+function detectStaleTokenValues(cssVars: CSSVariable[], figmaTokens: DesignToken[]): DriftDetail[]
+```
+
+### Type 3: Variant Drift
+
+```typescript
+// Figma: Button variants = primary | secondary | destructive | ghost (new)
+// Code:  Button variant prop = "primary" | "secondary" | "destructive"
+// Drift: "ghost" designed, not implemented
+
+function detectVariantDrift(figmaComponent: FigmaComponent, codeComponent: CodeComponent): DriftDetail[]
+```
+
+**Combined drift output example:**
+```
+Button — 2 issues
+  ⚠ Hardcoded #2563eb on line 14 — use var(--color-primary-600)
+  ⚠ "ghost" variant in Figma but not in code props
+
+Card — 1 issue
+  ✗ Token color.surface.elevated is #ffffff in code but #f8fafc in Figma
+
+Modal — clean ✓
+```
+
+## Sync & Refresh Architecture
+
+State has two sources changing independently. The solution is a hybrid sync system.
+
+```
+                    ┌─────────────────────┐
+                    │   .forgekit/        │
+                    │   state.json        │  ← single source of truth
+                    │   state.lock        │
+                    └──────────┬──────────┘
+                               │
+           ┌───────────────────┼───────────────────┐
+           │                   │                   │
+    ┌──────▼──────┐   ┌────────▼───────┐   ┌──────▼──────┐
+    │  MCP Tools  │   │  Sync Daemon   │   │  CLI Sync   │
+    │  (reads)    │   │  (writes)      │   │  (writes)   │
+    └─────────────┘   └────────────────┘   └─────────────┘
+```
+
+### Layer 1: File System Watcher (Code Changes)
+
+Uses `chokidar`. Triggers on file save. 500ms debounce batches rapid changes.
+Only re-scans changed files — not the full codebase.
+
+### Layer 2: Figma Poller (Design Changes)
+
+Every 10 minutes, checks `last_modified` on the Figma file.
+If unchanged: skip (one API call cost).
+If changed: fetch only modified components using Figma's version-based diff.
+
+### Layer 3: Staleness Check on MCP Tool Calls
+
+Every tool call checks state age. If stale (>30 min default):
+- Returns current state immediately (non-blocking)
+- Triggers background sync
+- Flags response with `isStale: true` and age
+
+### Layer 4: Change Tracking
+
+Every sync appends to a change log. Powers `get_recent_changes()`:
+
+```
+get_recent_changes(since: "1 week ago")
+→ Button: ghost variant added in Figma (not yet in code)
+→ color.primary.600: value updated in Figma
+→ Modal: drift resolved
+```
+
+### Layer 5: Webhooks (Pro Tier / Hosted)
+
+Figma webhooks replace polling for hosted tier users.
+Designer saves → Figma POSTs to ForgeKit server → targeted sync in <60 seconds.
+
+## MCP Tools (v1 — 6 Tools)
+
+| Tool | Primary User | Purpose |
+|------|-------------|---------|
+| `get_design_system_state` | Dev / Designer | Full context — all components, tokens, status |
+| `get_gaps` | PM / Lead | Gap report in natural language |
+| `get_component` | Dev | Deep dive — Figma spec + code state for one component |
+| `get_missing_components` | Dev | What's in Figma but not built, prioritized |
+| `get_drifted_components` | Designer / Dev | What's built but no longer matches Figma |
+| `onboard` | New hire / Agent | Full design system orientation, role-tailored |
+
+### Onboard Tool
+
+The most impressive tool. Takes `role` parameter and tailors output:
+
+- **developer**: Component categories, token rules, patterns, gotchas, current drift issues
+- **designer**: What's built vs not, how devs use components, what causes drift
+- **pm**: Health percentage, estimated effort, risk areas
+- **agent**: Silent — loads full context into Claude's working memory for smarter subsequent calls
+
+## Configuration
+
+```json
+// .forgekit/config.json
+{
+  "figma": {
+    "fileId": "abc123",
+    "pollIntervalMs": 600000,
+    "webhookEnabled": false
+  },
+  "codebase": {
+    "componentDir": "src/components",
+    "storiesDir": "src/stories",
+    "watchEnabled": true,
+    "debounceMs": 500
+  },
+  "sync": {
+    "staleThresholdMs": 1800000,
+    "changeHistoryDays": 30
+  }
+}
+```
+
+---
+
+*See [Product Shell](/planning/product-shell) for the CLI and user-facing layer.*

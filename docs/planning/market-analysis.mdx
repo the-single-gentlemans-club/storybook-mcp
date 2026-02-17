@@ -1,0 +1,94 @@
+---
+title: "Market Analysis"
+description: "Competitive landscape, market gaps, and positioning for ForgeKit Context"
+---
+
+# Market Analysis
+
+## The Space We're Entering
+
+ForgeKit Context sits at the intersection of three markets:
+
+1. **Design-to-code tools** — saturated, commoditized, low differentiation
+2. **Design system management** — underserved, high enterprise value
+3. **AI developer tooling (MCP)** — first-mover window, almost no niche players
+
+The opportunity is in the third category with the second category's value proposition. Not code generation — **AI context for design systems**.
+
+## Competitive Landscape
+
+### Direct Competitors
+
+| Product | Direction | AI | Price | Key Gap |
+|---------|-----------|-----|-------|---------|
+| [story.to.design](https://story.to.design) | Storybook → Figma | None | $149/mo | One direction, no AI, no code gen |
+| Anima | Figma → React | Minimal | $49/mo | No Storybook, no MCP, no sync |
+| Locofy | Figma → React | Basic | $39/mo | No design system awareness |
+| Builder.io | Figma → Code | Some | $99/mo | No Storybook, no team context |
+| Zeroheight | DS docs | None | $149/mo | Static, no AI, no code awareness |
+| Supernova | DS docs + tokens | None | $200+/mo | No AI, no gap analysis |
+
+### Story.to.design — The Closest Competitor
+
+The only product doing real Storybook ↔ Figma work. Key details:
+- Goes **Storybook → Figma** (code is source of truth)
+- 11,000+ users, 1M+ variants generated
+- $149/mo per Storybook (no per-seat, just per Storybook)
+- Agency plan: custom pricing for 2+ Storybooks
+- No AI layer, no MCP, no code generation, no PM-readable output
+
+**ForgeKit's angle**: We go the other direction (Figma ↔ Storybook, bidirectional) at $49–79/mo with an AI backbone that theirs fundamentally cannot have. They're a Figma plugin. We're an MCP-native platform.
+
+### The Figma-to-Code Space (Why We're NOT There)
+
+Tools like Anima, Locofy, Builder.io, Figma's own Dev Mode — this space is crowded and the quality varies wildly. Teams have tried and been burned by generated code that doesn't match their patterns.
+
+**We're not a code generator.** We're an AI context layer. This is a critical positioning distinction.
+
+## The Gap Nobody Has Filled
+
+```
+story.to.design:   Storybook ──→ Figma      (one direction)
+Everyone else:     Figma ──→ Code            (generation, saturated)
+
+ForgeKit Context:  Figma ←──→ Storybook ←──→ Production
+                         (bidirectional, AI-native, team-aware)
+```
+
+The **bidirectional + AI-native + team-aware** combination is unbuilt. That's the moat.
+
+## Market Size Signal
+
+- story.to.design: 11,000+ users at $149/mo = ~$1.6M ARR if 10% convert to paid
+- Zeroheight: raised $17M (design system docs alone justify VC funding)
+- Chromatic (Storybook visual testing): used by tens of thousands of teams
+- Design systems are a standard practice at any team with 3+ engineers
+
+A tool that makes design systems AI-aware at $49–199/mo for teams that already spend $149/mo on story.to.design has a clear price anchor and willing buyers.
+
+## Positioning Statement
+
+**For product teams** who are tired of design and code being out of sync,
+
+**ForgeKit Context** is an AI context MCP
+
+**that** gives Claude and every AI tool in your workflow complete, always-current awareness of your design system —
+
+**unlike** design-to-code generators and Figma plugins,
+
+**ForgeKit** doesn't generate one-time code or sync in one direction. It makes your AI permanently aware of your team's full design/code state, so every discipline — design, dev, and product — works from the same source of truth.
+
+## The Window
+
+**Estimated first-mover window: 6–12 months.**
+
+Risk factors:
+- Anthropic builds native design system context into Claude
+- Figma builds native AI developer features (already started with Dev Mode AI)
+- A YC-backed startup enters with more resources
+
+Mitigation: The distribution moat (ForgeKit ecosystem, existing npm users, community relationships) matters more than the technical moat. Build the brand and the user base before the window closes.
+
+---
+
+*See [60-Day Roadmap](/planning/roadmap-60-day) for the build plan.*

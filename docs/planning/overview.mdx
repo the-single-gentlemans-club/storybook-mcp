@@ -1,0 +1,98 @@
+---
+title: "ForgeKit Context — Product Overview"
+description: "Vision, positioning, and product definition for ForgeKit Context MCP"
+---
+
+# ForgeKit Context — Product Overview
+
+<Info>
+This is internal planning documentation. It captures the product vision, market positioning, and strategic decisions for ForgeKit Context — the next product in the ForgeKit ecosystem.
+</Info>
+
+## The Problem
+
+Every cross-discipline product team wastes 20–30% of engineering time on alignment overhead:
+
+- Designers update Figma. Developers don't know.
+- Developers build components. Designers don't know they exist.
+- PMs can't answer "how far are we from shipping this?"
+- New hires take weeks to understand the component library.
+- AI tools (Claude, Cursor) have zero context about the team's actual design system.
+
+The result is constant re-work, misalignment, and a gap between what's designed and what's shipped.
+
+## The Solution
+
+**ForgeKit Context** is an MCP server that gives Claude — and every team member using AI — complete, always-current awareness of a product team's design system.
+
+Connect it once to Figma and the codebase. From that point on:
+
+- Every AI tool your team uses knows your component library
+- Every query is answered with real, accurate data about your specific system
+- Design, dev, and product work from the same source of truth
+
+## The One-Sentence Pitch
+
+> "ForgeKit tells your AI exactly what's been built and what hasn't — so your whole team stops guessing."
+
+## What ForgeKit Context Knows
+
+```
+Design layer
+├── Every Figma component, its variants, its props
+├── Design tokens (colors, spacing, typography)
+├── What's been updated recently
+└── Design decisions and annotations
+
+Code layer
+├── Every React component in the codebase
+├── What Storybook stories exist
+├── What's tested, what's documented
+└── Component usage patterns
+
+Gap layer (the killer feature)
+├── Designed but not built yet
+├── Built but drifted from the Figma spec
+├── Exists in code but not in Figma
+└── Missing stories or tests
+```
+
+## Target Audience
+
+**Primary**: 2–10 person startups with at least one designer and one developer sharing a Figma file and a React codebase.
+
+**Secondary**: Agencies managing design systems for multiple clients.
+
+**Eventually**: Enterprise design system teams at scale.
+
+## Product Tier Vision
+
+| Tier | Price | Target | Core Value |
+|------|-------|--------|------------|
+| Solo | $29/mo | Freelancers | One project, all features |
+| Studio | $79/mo | Small teams (2–5) | Shared context, drift alerts |
+| Product Team | $199/mo | Startup teams (5–15) | PM reports, onboarding, cross-discipline |
+| Enterprise | Custom | Large orgs | Multi-repo, SSO, compliance |
+
+**Beta launch**: Single price of $29/mo, everything included, locks in forever for beta users.
+
+## ForgeKit Ecosystem
+
+ForgeKit Context is built on top of three existing MCPs:
+
+```
+ForgeKit Context MCP       ← new product (orchestrator)
+├── forgekit-storybook-mcp ← exists (v0.10.6, published)
+├── forgekit-figma-mcp     ← exists (built)
+└── forgekit-react-mcp     ← exists (built)
+```
+
+The three underlying MCPs are the hard part. ForgeKit Context is the product layer that makes them useful together as a team tool.
+
+## Why Now
+
+The MCP ecosystem is in its first-mover window. Most competitors are building generic MCPs. The niche of **design-system-aware AI context for product teams** is unbuilt. The window is estimated at 6–12 months before a well-funded player moves in.
+
+---
+
+*Last updated: February 2026. See [Market Analysis](/planning/market-analysis) for competitive landscape.*
