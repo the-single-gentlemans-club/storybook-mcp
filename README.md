@@ -108,7 +108,7 @@ A **Model Context Protocol (MCP) server** for Storybook story generation, compon
 # 1. Install the package
 npm install forgekit-storybook-mcp
 
-# 2. Add to your MCP client config (see "MCP Client Setup" section)
+# 2. Create storybook-mcp.config.json in your project root (see Configuration)
 
 # 3. Add to your MCP client (see MCP Client Setup below)
 ```
@@ -297,6 +297,15 @@ npx forgekit-storybook-mcp --no-docs       # Don't generate MDX docs
 
 # Only create missing files, don't update existing ones
 npx forgekit-storybook-mcp --no-update
+
+# Force overwrite existing story/test/doc files
+npx forgekit-storybook-mcp --force
+
+# Only sync a specific library (must match library.name in config)
+npx forgekit-storybook-mcp --lib=ui
+
+# Run interactive setup wizard (creates storybook-mcp.config.json)
+npx forgekit-storybook-mcp --setup
 ```
 
 ### Combining Flags
@@ -310,6 +319,9 @@ npx forgekit-storybook-mcp --skip-init
 
 # Preview: see what would change without modifying files
 npx forgekit-storybook-mcp --dry-run --no-update
+
+# Force-regenerate only the ui library, then exit
+npx forgekit-storybook-mcp --init-only --force --lib=ui
 ```
 
 ---
