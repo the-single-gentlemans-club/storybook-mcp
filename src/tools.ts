@@ -20,6 +20,7 @@ import { validateLicense, requireFeature } from './utils/license.js'
 import { runPreflight } from './utils/preflight.js'
 import { mergeStories, parseStoryExports } from './utils/story-merger.js'
 import { recordStoryVersion, hashContent } from './utils/story-history.js'
+import { generateCodeConnect, writeCodeConnectFile } from './utils/code-connect-generator.js'
 
 /**
  * Tool: list_components
@@ -587,5 +588,43 @@ export async function updateStoryTool(
       : written
         ? `Updated story at ${story.filePath}${preserved.length > 0 ? `. Preserved user stories: ${preserved.join(', ')}` : ''}`
         : `Failed to write story at ${story.filePath}`,
+  }
+}
+
+/**
+ * Tool: generate_code_connect
+ * Generate a @figma/code-connect .figma.tsx file linking the component to Figma dev mode.
+ * Pro tier only.
+ */
+export async function generateCodeConnectTool(
+  config: StorybookMCPConfig,
+  args: {
+    componentPath: string
+    figmaNodeUrl?: string
+    overwrite?: boolean
+    dryRun?: boolean
+  }
+) {
+  const license = validateLicense(config)
+  requireFeature('code_connect', license)
+
+  const analysis = await analyzeComponent(config, args.componentPath)
+  const cc = await generateCodeConnect(config, analysis, args.figmaNodeUrl)
+
+  let written = false
+  if (!args.dryRun) {
+    written = await writeCodeConnectFile(config, cc, args.overwrite)
+  }
+
+  return {
+    codeConnect: cc,
+    written,
+    path: cc.filePath,
+    hasPlaceholderUrl: !args.figmaNodeUrl,
+    summary: args.dryRun
+      ? `Generated Code Connect for ${analysis.name} (dry run — not written)`
+      : written
+        ? `Created ${cc.filePath}${!args.figmaNodeUrl ? ' — replace FIGMA_NODE_URL_HERE with your Figma component URL' : ''}`
+        : `Code Connect file already exists at ${cc.filePath} (use overwrite: true to replace)`,
   }
 }

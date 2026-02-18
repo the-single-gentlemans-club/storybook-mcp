@@ -13,12 +13,13 @@ import { LicenseError } from './errors.js'
 const POLAR_ORG_ID = process.env.POLAR_ORG_ID || 'c39241cb-629a-4beb-8ec8-31820430d5fd'
 const POLAR_API_URL = process.env.POLAR_API_URL || 'https://api.polar.sh'
 
-export type Feature = 
+export type Feature =
   | 'basic_stories'
   | 'advanced_templates'
   | 'test_generation'
   | 'docs_generation'
   | 'unlimited_sync'
+  | 'code_connect'
 
 interface LicenseStatus {
   isValid: boolean
@@ -241,6 +242,8 @@ export function checkFeatureAccess(feature: Feature, status: LicenseStatus): boo
     case 'docs_generation':
       return false
     case 'unlimited_sync':
+      return false
+    case 'code_connect':
       return false
     default:
       return false

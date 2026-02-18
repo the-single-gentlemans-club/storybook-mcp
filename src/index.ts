@@ -32,6 +32,7 @@ import {
   generateTestTool,
   generateDocsTool,
   checkHealthTool,
+  generateCodeConnectTool,
 } from './tools.js'
 
 export { StorybookMCPConfig } from './types.js'
@@ -355,6 +356,35 @@ export function createStorybookMCPServer(config: StorybookMCPConfig) {
           properties: {},
         },
       },
+      {
+        name: 'generate_code_connect',
+        description:
+          'Generate a @figma/code-connect .figma.tsx file that links a React component to Figma dev mode. ' +
+          'Designers will see your real component code in Figma Dev Mode. Pro tier only.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            componentPath: {
+              type: 'string',
+              description: 'Path to the component file',
+            },
+            figmaNodeUrl: {
+              type: 'string',
+              description: 'Figma component URL (e.g. https://figma.com/design/<fileId>/...?node-id=...). ' +
+                'If omitted, a placeholder is used that you must replace.',
+            },
+            overwrite: {
+              type: 'boolean',
+              description: 'Overwrite existing .figma.tsx file',
+            },
+            dryRun: {
+              type: 'boolean',
+              description: 'Preview generated content without writing to disk',
+            },
+          },
+          required: ['componentPath'],
+        },
+      },
     ],
   }))
 
@@ -424,6 +454,10 @@ export function createStorybookMCPServer(config: StorybookMCPConfig) {
 
         case 'check_health':
           result = await checkHealthTool(config)
+          break
+
+        case 'generate_code_connect':
+          result = await generateCodeConnectTool(config, args as any)
           break
 
         default:
