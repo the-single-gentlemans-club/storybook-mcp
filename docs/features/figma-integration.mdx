@@ -1,0 +1,199 @@
+---
+title: 'Figma integration'
+description: 'Connect your Storybook stories to Figma using Code Connect and Code to Canvas'
+---
+
+## Overview
+
+ForgeKit provides two complementary Figma integrations that close the loop between your design system in Figma and your React components in code.
+
+<CardGroup cols={2}>
+  <Card title="Code Connect" icon="link" href="#code-connect">
+    Link your React components to Figma components so designers see real code in Dev Mode
+  </Card>
+  <Card title="Code to Canvas" icon="figma" href="#code-to-canvas">
+    Push Storybook story renders into Figma as editable frames (requires ForgeKit Context MCP)
+  </Card>
+</CardGroup>
+
+---
+
+## Code Connect
+
+[Figma Code Connect](https://www.figma.com/developers/code-connect) lets you attach your real React component code to a Figma component. When a designer inspects a component in Dev Mode, they see your actual implementation — props, variants, and usage examples — instead of auto-generated placeholder code.
+
+### Generate a Code Connect file
+
+Use the `generate_code_connect` tool:
+
+```json
+{
+  "componentPath": "src/components/Button.tsx",
+  "figmaNodeUrl": "https://figma.com/design/abc123/MyDesignSystem?node-id=1%3A2"
+}
+```
+
+This creates `src/components/Button.figma.tsx`:
+
+```tsx
+import figma from '@figma/code-connect/react'
+import { Button } from './Button'
+
+figma.connect(Button, 'https://figma.com/design/abc123/MyDesignSystem?node-id=1%3A2', {
+  props: {
+    variant: figma.enum('Variant', {
+      "primary": "primary",
+      "secondary": "secondary",
+      "ghost": "ghost",
+    }),
+    disabled: figma.boolean('Disabled'),
+    children: figma.children(['*']),
+  },
+  example: ({ variant, disabled, children }) => (
+    <Button variant={variant} disabled={disabled}>{children}</Button>
+  ),
+})
+```
+
+### Prop mapping
+
+The tool automatically maps TypeScript prop types to Figma property bindings:
+
+| Prop type | Figma binding | Notes |
+|-----------|---------------|-------|
+| `string` | `figma.string()` | Text properties |
+| `boolean` | `figma.boolean()` | Toggle properties |
+| `'a' \| 'b'` union | `figma.enum()` | Variant/instance-swap properties |
+| `ReactNode` / `children` | `figma.children(['*'])` | Nested layers |
+| `number` | `figma.number()` | Numeric properties |
+
+Event handlers, `className`, `style`, and `ref` are excluded automatically.
+
+### Publish to Figma
+
+After generating, publish your Code Connect files:
+
+<Steps>
+  <Step title="Install @figma/code-connect">
+    ```bash
+    npm install --save-dev @figma/code-connect
+    ```
+  </Step>
+  <Step title="Authenticate with Figma">
+    ```bash
+    npx figma connect login
+    ```
+  </Step>
+  <Step title="Publish all .figma.tsx files">
+    ```bash
+    npx figma connect publish
+    ```
+  </Step>
+</Steps>
+
+<Tip>
+  Run `generate_code_connect` for each component in your design system, then publish all at once with a single `npx figma connect publish` command.
+</Tip>
+
+---
+
+## Code to Canvas
+
+Code to Canvas (announced February 2026 by Figma and Anthropic) lets you push rendered UI into Figma as editable frames. It uses the Figma desktop app's Dev Mode MCP server, which Claude Code can connect to directly.
+
+<Note>
+  Code to Canvas is part of **ForgeKit Context MCP** (`forgekit-context`), the orchestration layer that connects Storybook MCP, Figma, and the Figma desktop app. It is not part of `forgekit-storybook-mcp` directly.
+</Note>
+
+### How it works
+
+ForgeKit Context connects to three services:
+1. **Figma API** (`figma-developer-mcp`) — reads design tokens and Code Connect mappings
+2. **Storybook MCP** — lists components with stories
+3. **Figma desktop Dev Mode server** (port 3845) — pushes rendered UI to the canvas
+
+The `sync_stories_to_figma` tool loops through all components that have stories, builds iframe URLs pointing at your running Storybook, and calls `generate_figma_design` on the Figma desktop MCP server.
+
+### Setup
+
+<Steps>
+  <Step title="Open Figma desktop">
+    Launch the Figma desktop application (not the browser version).
+  </Step>
+  <Step title="Enable Dev Mode MCP server">
+    Go to **Figma menu → Preferences → Enable Dev Mode MCP Server**.
+
+    The server starts at `http://127.0.0.1:3845/sse`.
+  </Step>
+  <Step title="Install ForgeKit Context">
+    ```bash
+    npm install -g forgekit-context
+    ```
+  </Step>
+  <Step title="Run the sync">
+    Ask Claude to run `sync_stories_to_figma`, or call it directly:
+
+    ```json
+    {
+      "storybookUrl": "http://localhost:6006",
+      "dryRun": true
+    }
+    ```
+
+    Remove `dryRun` to push the stories to Figma.
+  </Step>
+</Steps>
+
+### What gets pushed
+
+For each component with a story, the tool derives the default story ID and builds a Storybook iframe URL:
+
+```
+http://localhost:6006/iframe.html?id=components-button--default&viewMode=story
+```
+
+Figma's `generate_figma_design` renders this URL and creates an editable frame on your canvas.
+
+<Warning>
+  Your Storybook must be running locally (`npm run storybook`) for Code to Canvas to render the stories. The Figma desktop app fetches each iframe URL at push time.
+</Warning>
+
+### Dry run first
+
+Before pushing, preview which stories would be synced:
+
+```json
+{
+  "dryRun": true
+}
+```
+
+The response lists every component that would be pushed, with the iframe URL that would be sent to Figma.
+
+---
+
+## When Figma desktop is not running
+
+Both tools degrade gracefully:
+
+- **`generate_code_connect`** — works entirely offline. It generates `.figma.tsx` files from your source code with no Figma connection required.
+- **`sync_stories_to_figma`** — returns a clear message with setup instructions if the Figma Dev Mode MCP server is not detected.
+
+---
+
+## Related tools
+
+<CardGroup cols={2}>
+  <Card title="generate_code_connect" icon="code" href="/api-reference/generate-code-connect">
+    Generate .figma.tsx Code Connect files
+  </Card>
+  <Card title="analyze_component" icon="magnifying-glass" href="/api-reference/analyze-component">
+    Inspect props before generating Code Connect
+  </Card>
+  <Card title="generate_story" icon="wand-magic-sparkles" href="/api-reference/generate-story">
+    Generate the stories that get pushed to Figma
+  </Card>
+  <Card title="sync_all" icon="arrows-rotate" href="/api-reference/sync-all">
+    Generate stories for all components at once
+  </Card>
+</CardGroup>

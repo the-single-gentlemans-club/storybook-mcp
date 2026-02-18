@@ -1,0 +1,174 @@
+---
+title: 'generate_code_connect'
+description: 'Generate a Figma Code Connect file that links your component to Figma Dev Mode'
+---
+
+## Overview
+
+The `generate_code_connect` tool creates a `.figma.tsx` file for a React component. When published with the `@figma/code-connect` CLI, Figma's Dev Mode panel shows your real component code — including prop mappings — instead of auto-generated snippets.
+
+<Info>
+  This is a Pro feature. It requires `@figma/code-connect` to be installed in your project to publish the generated files.
+</Info>
+
+## How it works
+
+The tool analyzes your component's props and maps them to Figma property bindings:
+
+| Prop type | Figma binding |
+|-----------|---------------|
+| `string` | `figma.string('PropName')` |
+| `boolean` | `figma.boolean('PropName')` |
+| `'a' \| 'b' \| 'c'` | `figma.enum('PropName', { a: 'a', b: 'b', c: 'c' })` |
+| `ReactNode` / `children` | `figma.children(['*'])` |
+| `number` | `figma.number('PropName')` |
+
+Internal props are automatically excluded: event handlers (`onClick`, etc.), `className`, `style`, and `ref`.
+
+## Parameters
+
+<ParamField path="componentPath" type="string" required>
+  Path to the component file relative to project root
+
+  ```plaintext Example
+  "src/components/Button.tsx"
+  ```
+</ParamField>
+
+<ParamField path="figmaNodeUrl" type="string">
+  The URL of the Figma component node to link to.
+
+  Format: `https://figma.com/design/<fileId>/<fileName>?node-id=<nodeId>`
+
+  If omitted, a placeholder `FIGMA_NODE_URL_HERE` is used that you must replace before publishing.
+
+  <Tip>
+    Copy this URL from Figma by right-clicking a component in the canvas and selecting "Copy link".
+  </Tip>
+</ParamField>
+
+<ParamField path="overwrite" type="boolean" default="false">
+  Replace an existing `.figma.tsx` file if one already exists
+</ParamField>
+
+<ParamField path="dryRun" type="boolean" default="false">
+  Preview the generated file content without writing to disk
+</ParamField>
+
+## Examples
+
+<CodeGroup>
+```json Generate with placeholder URL
+{
+  "componentPath": "src/components/Button.tsx"
+}
+```
+
+```json Generate with Figma URL
+{
+  "componentPath": "src/components/Button.tsx",
+  "figmaNodeUrl": "https://figma.com/design/abc123/MyDesignSystem?node-id=1%3A2"
+}
+```
+
+```json Preview output
+{
+  "componentPath": "src/components/Button.tsx",
+  "dryRun": true
+}
+```
+
+```json Regenerate existing file
+{
+  "componentPath": "src/components/Button.tsx",
+  "figmaNodeUrl": "https://figma.com/design/abc123/MyDesignSystem?node-id=1%3A2",
+  "overwrite": true
+}
+```
+</CodeGroup>
+
+## Generated output
+
+For a `Button` component with `variant`, `disabled`, and `children` props, the tool generates:
+
+```tsx Button.figma.tsx
+import figma from '@figma/code-connect/react'
+import { Button } from './Button'
+
+figma.connect(Button, 'https://figma.com/design/abc123/MyDesignSystem?node-id=1%3A2', {
+  props: {
+    variant: figma.enum('Variant', {
+      "primary": "primary",
+      "secondary": "secondary",
+      "ghost": "ghost",
+    }),
+    disabled: figma.boolean('Disabled'),
+    children: figma.children(['*']),
+  },
+  example: ({ variant, disabled, children }) => (
+    <Button variant={variant} disabled={disabled}>{children}</Button>
+  ),
+})
+```
+
+## Response
+
+<ResponseField name="codeConnect" type="object">
+  <Expandable title="Code Connect object">
+    <ResponseField name="content" type="string">
+      Generated `.figma.tsx` file content
+    </ResponseField>
+    <ResponseField name="filePath" type="string">
+      Path where the file will be written (e.g., `src/components/Button.figma.tsx`)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="written" type="boolean">
+  Whether the file was written to disk
+</ResponseField>
+
+<ResponseField name="path" type="string">
+  Path to the generated `.figma.tsx` file
+</ResponseField>
+
+<ResponseField name="hasPlaceholderUrl" type="boolean">
+  `true` if `FIGMA_NODE_URL_HERE` placeholder was used (no `figmaNodeUrl` provided)
+</ResponseField>
+
+<ResponseField name="summary" type="string">
+  Human-readable result message
+</ResponseField>
+
+## After generating
+
+<Steps>
+  <Step title="Install @figma/code-connect">
+    ```bash
+    npm install --save-dev @figma/code-connect
+    ```
+  </Step>
+  <Step title="Replace the placeholder URL">
+    If you used `dryRun` or didn't provide `figmaNodeUrl`, open the generated file and replace `FIGMA_NODE_URL_HERE` with the real Figma component URL.
+  </Step>
+  <Step title="Publish to Figma">
+    ```bash
+    npx figma connect publish
+    ```
+    This publishes all `.figma.tsx` files in your project to Figma.
+  </Step>
+  <Step title="Verify in Figma Dev Mode">
+    Open the component in Figma, switch to Dev Mode, and your real React code will appear in the Code panel.
+  </Step>
+</Steps>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Figma integration overview" icon="figma" href="/features/figma-integration">
+    Full guide to connecting Storybook and Figma
+  </Card>
+  <Card title="analyze_component" icon="magnifying-glass" href="/api-reference/analyze-component">
+    See what props will be extracted before generating
+  </Card>
+</CardGroup>

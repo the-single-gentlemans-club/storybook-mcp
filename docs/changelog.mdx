@@ -1,0 +1,163 @@
+---
+title: 'Changelog'
+description: 'Release history for forgekit-storybook-mcp'
+sidebarTitle: 'Changelog'
+---
+
+## [Unreleased]
+
+- `update_story` — regenerate stories while preserving user-written exports (Pro)
+- `generate_code_connect` — generate Figma Code Connect `.figma.tsx` files (Pro)
+- Import validation on story generation — non-blocking warnings for unresolvable imports
+- Story version tracking in `.forgekit/story-history.json`
+
+---
+
+## [0.10.6] — 2026-02-16
+
+### Changed
+
+- **Pricing: $49 → $29** — reduced Pro tier launch price
+- **Free tier: 5 → 10 components** — doubled free tier allowance
+
+---
+
+## [0.10.5] — 2026-02-16
+
+### Added
+
+- **React Native Web auto-configuration** — generates `vite.config.ts` with React Native Web aliasing for React Native/Expo projects
+- **App directory story paths** — stories in `app/**/*.stories.*` included automatically for Expo Router projects
+
+### Changed
+
+- Setup command now detects React Native/Expo projects and configures appropriate tooling
+
+---
+
+## [0.10.4] — 2026-02-16
+
+### Fixed
+
+- **Critical:** prop extraction failing on Windows due to CRLF line endings — story files were generated with no args
+- Union type detection not recognizing double-quote string literals (`"light" | "medium"`)
+- Improved default args for common prop names (`title`, `label`, `placeholder`, `text`, `value`, `name`, `id`)
+- Better defaults for optional boolean and number props
+
+---
+
+## [0.10.1] — 2026-02-16
+
+### Fixed
+
+- **Test suite** — downgraded Vitest 4.x → 3.2.4 to resolve "failed to find the runner" errors
+- **Router detection** — added `react-router-dom` to router package detection
+- **TypeScript module resolution** — changed from `bundler` to `node`
+- All 124 tests passing
+
+### Verified
+
+- Framework-specific docs generation for Chakra, Tamagui, Gluestack, shadcn, vanilla
+- Component-level framework detection via import analysis
+- MSW template timeout correct at 5000ms
+
+---
+
+## [0.10.0] — 2026-02-15
+
+### Breaking changes
+
+- **Minimum Storybook version: 10.2+**
+- **Minimum Node.js version: 20+**
+
+### Added
+
+- **Vitest addon integration** — auto-configured for Vite-based projects
+
+### Changed
+
+- All Storybook dependencies upgraded to `^10.2.0`
+
+---
+
+## [0.9.4] — 2026-02-15
+
+### Changed
+
+- GitHub organization migrated to `the-single-gentlemans-club/storybook-mcp`
+- Updated all repository URLs
+
+### Fixed
+
+- Type safety in MCP tool arguments — explicit typed objects replace inline assertions
+
+---
+
+## [0.9.3] — 2026-02-15
+
+### Added
+
+- **Comprehensive Mintlify documentation** — 33 pages covering all features
+- Complete API reference for all 12 MCP tools
+- Framework-specific guides (Chakra, shadcn/ui, Tamagui, Gluestack, React Native)
+- MCP client setup guides (Cursor, Claude Desktop, Programmatic)
+- 7 story template documentation pages with examples
+- License and pricing documentation
+
+---
+
+## [0.8.7] — 2026-02-13
+
+### Fixed
+
+- **Free tier sync limit was never enforced** — free users got unlimited Pro features since launch
+- Free tier no longer generates tests or docs
+- Stale upgrade URL in initializer
+- Playwright tests no longer generated when `@playwright/test` is not installed
+- Generated tests wrap in correct framework provider (Chakra / Gluestack / Tamagui)
+
+### Added
+
+- `POLAR_UPGRADE_URL` centralized in `src/utils/constants.ts`
+- `POLAR_API_URL` env var for switching between sandbox/production Polar APIs
+- 124 passing tests across 10 test files
+
+### Changed
+
+- `tags: []` default — prevents duplicate pages with explicit MDX docs
+- MDX imports from `@storybook/addon-docs/blocks`
+
+---
+
+## [0.7.0] — 2026-02-11
+
+### Added
+
+- **Preflight health check** — checks for missing packages, outdated configs, version mismatches on startup
+- `check_health` MCP tool — run health checks on demand
+- Detection for deprecated SB10 patterns: `argTypesRegex`, old test library imports
+
+### Fixed
+
+- Removed deprecated `argTypesRegex` from all generated preview templates
+
+---
+
+## [0.6.0] — 2026-02-10
+
+### Changed
+
+- Switched licensing from LemonSqueezy to Polar.sh
+
+---
+
+## [0.4.1] — 2026-02-08
+
+### Added
+
+- Initial public npm release as `forgekit-storybook-mcp`
+- `--setup` command for scaffolding `.storybook/` configuration
+- Auto-detection of UI framework (Chakra, shadcn, Tamagui, Gluestack, React Native)
+- 12 MCP tools
+- 8 story templates: basic, with-controls, with-variants, with-msw, with-router, page, interactive, form
+- Free/Pro licensing model via Polar.sh
