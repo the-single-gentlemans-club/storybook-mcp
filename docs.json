@@ -10,108 +10,116 @@
   "colors": {
     "primary": "#FF4785",
     "light": "#FF6A95",
-    "dark": "#FF4785",
-    "anchors": {
-      "from": "#FF4785",
-      "to": "#FF6A95"
+    "dark": "#FF4785"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Support",
+        "href": "mailto:forgekit@pm.me"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get Pro License",
+      "href": "https://buy.polar.sh/polar_cl_Tnd3ryKUJpYPnXF0kBW1KFHQnoLlxAq2cz9GL3Et0dV"
     }
   },
-  "topbarLinks": [
-    {
-      "name": "Support",
-      "url": "mailto:forgekit@pm.me"
-    }
-  ],
-  "topbarCtaButton": {
-    "name": "Get Pro License",
-    "url": "https://buy.polar.sh/polar_cl_Tnd3ryKUJpYPnXF0kBW1KFHQnoLlxAq2cz9GL3Et0dV"
+  "navigation": {
+    "anchors": [
+      {
+        "anchor": "npm Package",
+        "icon": "npm",
+        "href": "https://npmjs.com/package/forgekit-storybook-mcp"
+      },
+      {
+        "anchor": "GitHub",
+        "icon": "github",
+        "href": "https://github.com/the-single-gentlemans-club/storybook-mcp"
+      }
+    ],
+    "tabs": [
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["introduction", "quickstart", "installation", "configuration"]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "features/auto-sync",
+              "features/frameworks",
+              "features/figma-integration",
+              "features/cli-flags"
+            ]
+          },
+          {
+            "group": "MCP Client Setup",
+            "pages": [
+              "mcp-setup/cursor",
+              "mcp-setup/claude-desktop",
+              "mcp-setup/programmatic"
+            ]
+          },
+          {
+            "group": "License",
+            "pages": ["license/pricing", "license/activation"]
+          },
+          {
+            "group": "Reference",
+            "pages": ["changelog"]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Tools",
+            "pages": [
+              "api-reference/overview",
+              "api-reference/list-components",
+              "api-reference/analyze-component",
+              "api-reference/generate-story",
+              "api-reference/update-story",
+              "api-reference/generate-test",
+              "api-reference/generate-docs",
+              "api-reference/generate-code-connect",
+              "api-reference/validate-story",
+              "api-reference/sync-all",
+              "api-reference/sync-component",
+              "api-reference/get-component-coverage",
+              "api-reference/suggest-stories",
+              "api-reference/check-health"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Templates",
+        "groups": [
+          {
+            "group": "Templates",
+            "pages": [
+              "templates/overview",
+              "templates/basic",
+              "templates/with-variants",
+              "templates/with-msw",
+              "templates/with-router",
+              "templates/interactive",
+              "templates/form"
+            ]
+          }
+        ]
+      }
+    ]
   },
-  "tabs": [
-    {
-      "name": "API Reference",
-      "url": "api-reference"
-    },
-    {
-      "name": "Templates",
-      "url": "templates"
+  "footer": {
+    "socials": {
+      "github": "https://github.com/the-single-gentlemans-club/storybook-mcp",
+      "x": "https://x.com/forgekitdev"
     }
-  ],
-  "anchors": [
-    {
-      "name": "npm Package",
-      "icon": "npm",
-      "url": "https://npmjs.com/package/forgekit-storybook-mcp"
-    },
-    {
-      "name": "GitHub",
-      "icon": "github",
-      "url": "https://github.com/the-single-gentlemans-club/storybook-mcp"
-    }
-  ],
-  "navigation": [
-    {
-      "group": "Get Started",
-      "pages": ["introduction", "quickstart", "installation", "configuration"]
-    },
-    {
-      "group": "Features",
-      "pages": [
-        "features/auto-sync",
-        "features/frameworks",
-        "features/figma-integration",
-        "features/cli-flags"
-      ]
-    },
-    {
-      "group": "MCP Client Setup",
-      "pages": [
-        "mcp-setup/cursor",
-        "mcp-setup/claude-desktop",
-        "mcp-setup/programmatic"
-      ]
-    },
-    {
-      "group": "API Reference",
-      "pages": [
-        "api-reference/overview",
-        "api-reference/list-components",
-        "api-reference/analyze-component",
-        "api-reference/generate-story",
-        "api-reference/update-story",
-        "api-reference/generate-test",
-        "api-reference/generate-docs",
-        "api-reference/generate-code-connect",
-        "api-reference/validate-story",
-        "api-reference/sync-all",
-        "api-reference/sync-component",
-        "api-reference/get-component-coverage",
-        "api-reference/suggest-stories",
-        "api-reference/check-health"
-      ]
-    },
-    {
-      "group": "Templates",
-      "pages": [
-        "templates/overview",
-        "templates/basic",
-        "templates/with-variants",
-        "templates/with-msw",
-        "templates/with-router",
-        "templates/interactive",
-        "templates/form"
-      ]
-    },
-    {
-      "group": "License",
-      "pages": ["license/pricing", "license/activation"]
-    },
-    {
-      "group": "Reference",
-      "pages": ["changelog"]
-    }
-  ],
-  "footerSocials": {
-    "github": "https://github.com/the-single-gentlemans-club/storybook-mcp",
-    "x": "https://x.com/forgekitdev"
   }
 }
