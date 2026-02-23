@@ -202,19 +202,16 @@ export async function removeScaffoldConflicts(
 ): Promise<string[]> {
   const removed: string[] = []
   try {
-    const storyFiles = await fg(
-      ['**/*.stories.{ts,tsx,js,jsx}', '**/*.mdx'],
-      {
-        cwd: rootDir,
-        ignore: [
-          '**/node_modules/**',
-          '**/dist/**',
-          '**/.next/**',
-          '**/build/**'
-        ],
-        absolute: false
-      }
-    )
+    const storyFiles = await fg(['**/*.stories.{ts,tsx,js,jsx}', '**/*.mdx'], {
+      cwd: rootDir,
+      ignore: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/.next/**',
+        '**/build/**'
+      ],
+      absolute: false
+    })
 
     // Group files by normalised basename (case-insensitive, no extension)
     const byBasename = new Map<string, string[]>()
