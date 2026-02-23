@@ -17,7 +17,11 @@ import path from 'node:path'
 import { runServer } from './index.js'
 import type { StorybookMCPConfig } from './types.js'
 import { DEFAULT_CONFIG } from './types.js'
-import { initializeComponents, startFileWatcher, removeScaffoldConflicts } from './utils/initializer.js'
+import {
+  initializeComponents,
+  startFileWatcher,
+  removeScaffoldConflicts
+} from './utils/initializer.js'
 import { validateLicenseAsync, resetLicenseCache } from './utils/license.js'
 import { runSetup } from './utils/setup.js'
 import { runPreflight } from './utils/preflight.js'
