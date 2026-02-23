@@ -17,7 +17,7 @@ import path from 'node:path'
 import { runServer } from './index.js'
 import type { StorybookMCPConfig } from './types.js'
 import { DEFAULT_CONFIG } from './types.js'
-import { initializeComponents, startFileWatcher } from './utils/initializer.js'
+import { initializeComponents, startFileWatcher, removeScaffoldConflicts } from './utils/initializer.js'
 import { validateLicenseAsync, resetLicenseCache } from './utils/license.js'
 import { runSetup } from './utils/setup.js'
 import { runPreflight } from './utils/preflight.js'
@@ -138,6 +138,7 @@ function parseArgs(): {
   force: boolean
   resetLicense: boolean
   noWatch: boolean
+  cleanupOnly: boolean
   libName?: string
 } {
   const args = process.argv.slice(2)
@@ -162,6 +163,7 @@ function parseArgs(): {
     force: args.includes('--force'),
     resetLicense: args.includes('--reset-license'),
     noWatch: args.includes('--no-watch'),
+    cleanupOnly: args.includes('--cleanup-only'),
     libName
   }
 }
@@ -182,6 +184,7 @@ SETUP (run first for new projects):
 
 OPTIONS:
   --init-only     Generate files and exit (no MCP server)
+  --cleanup-only  Remove Storybook scaffold files that conflict with generated stories, then exit
   --dry-run       Show what would be created without writing files
   --skip-init     Skip initial component sync
   --no-stories    Don't generate story files
@@ -234,6 +237,20 @@ async function main() {
 
   if (args.help) {
     showHelp()
+    process.exit(0)
+  }
+
+  // Handle --cleanup-only: remove scaffold conflicts and exit (used as prestorybook script)
+  if (args.cleanupOnly) {
+    const removed = await removeScaffoldConflicts(cwd)
+    if (removed.length > 0) {
+      console.error(
+        `[storybook-mcp] Removed ${removed.length} scaffold file(s) that conflicted with generated stories:`
+      )
+      for (const f of removed) {
+        console.error(`  - ${f}`)
+      }
+    }
     process.exit(0)
   }
 
@@ -395,6 +412,11 @@ Use --setup --dry-run to preview without writing files.
     `[storybook-mcp] Libraries: ${config.libraries.map(l => l.name).join(', ')}`
   )
 
+  // Ensure the prestorybook script exists in package.json so scaffold cleanup
+  // runs automatically every time `npm run storybook` is invoked, without any
+  // user action required.
+  ensurePrestorybookScript(cwd)
+
   // Run preflight checks
   const preflight = await runPreflight(cwd)
   if (!preflight.passed) {
@@ -485,6 +507,28 @@ Use --setup --dry-run to preview without writing files.
   console.error(`[storybook-mcp] Starting MCP server...`)
   await runServer(config)
   cleanup()
+}
+
+/**
+ * Inject a `prestorybook` script into the consumer's package.json if one doesn't
+ * already exist. This ensures scaffold file cleanup runs automatically every time
+ * the consumer runs `npm run storybook`, with no manual action required.
+ */
+function ensurePrestorybookScript(rootDir: string): void {
+  const pkgPath = path.join(rootDir, 'package.json')
+  if (!fs.existsSync(pkgPath)) return
+  try {
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
+    if (!pkg.scripts) return // no scripts block — nothing to hook into
+    if (pkg.scripts.prestorybook) return // already set, don't overwrite
+    pkg.scripts.prestorybook = 'npx forgekit-storybook-mcp --cleanup-only'
+    fs.writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`)
+    console.error(
+      `[storybook-mcp] Added "prestorybook" script to package.json — scaffold cleanup will now run automatically before Storybook starts`
+    )
+  } catch {
+    // Non-fatal — if we can't write, just skip
+  }
 }
 
 /**

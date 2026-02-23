@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.1.5] - 2026-02-23
+
+### Added
+
+- **`--cleanup-only` CLI flag** — removes scaffold story/MDX files that conflict with generated stories and exits immediately. Designed to be used as a `prestorybook` npm lifecycle hook so cleanup happens automatically every time `npm run storybook` is invoked.
+- **Auto-inject `prestorybook` script** — on first startup the MCP server now adds `"prestorybook": "npx forgekit-storybook-mcp --cleanup-only"` to the consumer's `package.json` if one doesn't already exist. This means scaffold conflicts are resolved *before Storybook starts*, with zero user action required.
+- **`prestorybook` script in `--setup`** — the setup command now includes `prestorybook` in the scripts it writes to `package.json`.
+
 ## [1.1.4] - 2026-02-23
 
 ### Fixed

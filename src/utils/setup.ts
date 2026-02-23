@@ -641,7 +641,8 @@ function getScripts(config: SetupConfig): PackageScripts {
   return {
     storybook: 'storybook dev -p 6006',
     'build-storybook': 'storybook build',
-    'test-storybook': 'test-storybook'
+    'test-storybook': 'test-storybook',
+    prestorybook: 'npx forgekit-storybook-mcp --cleanup-only'
   }
 }
 
