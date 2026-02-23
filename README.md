@@ -746,7 +746,7 @@ Generate MDX documentation for a component. **(Pro only)**
 ```json
 {
   "docs": {
-    "content": "import { Canvas, Meta, ArgTypes } from '@storybook/addon-docs/blocks'\nimport * as ButtonStories from './Button.stories'\n\n<Meta of={ButtonStories} />\n\n# Button\n\n## Usage\n\n<Canvas of={ButtonStories.Default} />\n\n## Props\n\n<ArgTypes of={ButtonStories} />\n...",
+    "content": "import { Canvas, Meta, ArgTypes } from '@storybook/blocks'\nimport * as ButtonStories from './Button.stories'\n\n<Meta of={ButtonStories} />\n\n# Button\n\n## Usage\n\n<Canvas of={ButtonStories.Default} />\n\n## Props\n\n<ArgTypes of={ButtonStories} />\n...",
     "filePath": "libs/ui/src/button/button.mdx"
   },
   "written": true,

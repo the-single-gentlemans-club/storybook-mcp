@@ -25,15 +25,24 @@ export const FILE_EXTENSIONS = {
   TSX: '.tsx',
   TS: '.ts',
   JSX: '.jsx',
-  JS: '.js',
+  JS: '.js'
 } as const
 
 // ===========================================
 // File Patterns
 // ===========================================
 export const DEFAULT_STORY_PATTERN = '**/*.stories.{ts,tsx}'
-export const DEFAULT_COMPONENT_PATTERNS = ['**/*.tsx', '!**/*.stories.tsx', '!**/*.test.tsx']
-export const DEFAULT_EXCLUDE_PATTERNS = ['**/node_modules/**', '**/dist/**', '**/.next/**', '**/build/**']
+export const DEFAULT_COMPONENT_PATTERNS = [
+  '**/*.tsx',
+  '!**/*.stories.tsx',
+  '!**/*.test.tsx'
+]
+export const DEFAULT_EXCLUDE_PATTERNS = [
+  '**/node_modules/**',
+  '**/dist/**',
+  '**/.next/**',
+  '**/build/**'
+]
 
 // ===========================================
 // Special File Names (Non-Components)
@@ -47,7 +56,7 @@ export const NON_COMPONENT_FILES = [
   'styles',
   'helpers',
   'config',
-  'api',
+  'api'
 ] as const
 
 // ===========================================
@@ -57,7 +66,7 @@ export const DIRECTORIES = {
   STORYBOOK: '.storybook',
   STORIES: 'stories',
   STORIES_ALT: '__stories__',
-  TESTS: '__tests__',
+  TESTS: '__tests__'
 } as const
 
 // ===========================================
@@ -67,7 +76,7 @@ export const STORYBOOK_FILES = {
   PREVIEW_TSX: 'preview.tsx',
   PREVIEW_TS: 'preview.ts',
   MAIN_TS: 'main.ts',
-  CACHE: '.storybook-mcp-cache.json',
+  CACHE: '.storybook-mcp-cache.json'
 } as const
 
 // ===========================================
@@ -75,7 +84,7 @@ export const STORYBOOK_FILES = {
 // ===========================================
 export const CACHE = {
   VERSION: '1',
-  FILENAME: '.storybook-mcp-cache.json',
+  FILENAME: '.storybook-mcp-cache.json'
 } as const
 
 // ===========================================
@@ -90,7 +99,7 @@ export const STORY_HISTORY_FILENAME = 'story-history.json'
 export const THRESHOLDS = {
   EMPTY_FILE_SIZE: 50, // Bytes - files smaller than this are considered empty/minimal
   SOURCE_PREVIEW_LENGTH: 1000, // Characters to include in source preview
-  MAX_NOTABLE_IMPORTS: 10, // Maximum number of imports to track
+  MAX_NOTABLE_IMPORTS: 10 // Maximum number of imports to track
 } as const
 
 // ===========================================
@@ -98,13 +107,16 @@ export const THRESHOLDS = {
 // ===========================================
 export const TIMEOUTS = {
   MSW_LOADING_STORY: 5000, // MSW loading story timeout in ms
-  MSW_NETWORK_DELAY: 1000, // Default MSW network delay in ms
+  MSW_NETWORK_DELAY: 1000 // Default MSW network delay in ms
 } as const
 
 // ===========================================
 // Storybook Version
 // ===========================================
+/** Minimum required Storybook major version */
 export const STORYBOOK_VERSION = 10
+/** Fallback version used when no Storybook installation is detected */
+export const DEFAULT_STORYBOOK_VERSION = '10.2.0'
 
 // ===========================================
 // Required Packages
@@ -113,7 +125,7 @@ export const REQUIRED_PACKAGES = {
   STORYBOOK: '@storybook/react',
   TESTING_LIBRARY: '@testing-library/react',
   PLAYWRIGHT: '@playwright/test',
-  VITEST: 'vitest',
+  VITEST: 'vitest'
 } as const
 
 // ===========================================
@@ -126,7 +138,7 @@ export const STORYBOOK_ADDONS = {
   LINKS: '@storybook/addon-links',
   DOCS: '@storybook/addon-docs',
   ROUTER: 'storybook-addon-remix-react-router',
-  MSW: 'msw-storybook-addon',
+  MSW: 'msw-storybook-addon'
 } as const
 
 // ===========================================
@@ -135,5 +147,5 @@ export const STORYBOOK_ADDONS = {
 export const STORY_SEARCH_PATHS = [
   '', // Same directory as component
   DIRECTORIES.STORIES,
-  DIRECTORIES.STORIES_ALT,
+  DIRECTORIES.STORIES_ALT
 ] as const

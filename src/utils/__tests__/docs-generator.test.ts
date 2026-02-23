@@ -5,15 +5,19 @@ import type { StorybookMCPConfig, ComponentAnalysis } from '../../types.js'
 function makeConfig(): StorybookMCPConfig {
   return {
     rootDir: '/tmp/test-project',
-    libraries: [{ name: 'ui', path: 'src/components', storyTitlePrefix: 'Components' }],
+    libraries: [
+      { name: 'ui', path: 'src/components', storyTitlePrefix: 'Components' }
+    ],
     framework: 'vanilla',
     storyFilePattern: '**/*.stories.{ts,tsx}',
     componentPatterns: ['**/src/**/*.tsx'],
-    excludePatterns: ['**/node_modules/**'],
+    excludePatterns: ['**/node_modules/**']
   }
 }
 
-function makeAnalysis(overrides: Partial<ComponentAnalysis> = {}): ComponentAnalysis {
+function makeAnalysis(
+  overrides: Partial<ComponentAnalysis> = {}
+): ComponentAnalysis {
   return {
     name: 'Card',
     filePath: 'src/components/Card.tsx',
@@ -21,27 +25,49 @@ function makeAnalysis(overrides: Partial<ComponentAnalysis> = {}): ComponentAnal
     hasStory: false,
     exportType: 'named',
     props: [
-      { name: 'variant', type: "'solid' | 'outline'", required: false, controlType: 'select', controlOptions: ['solid', 'outline'] },
-      { name: 'size', type: "'sm' | 'md'", required: false, controlType: 'select', controlOptions: ['sm', 'md'] },
-      { name: 'children', type: 'React.ReactNode', required: true },
+      {
+        name: 'variant',
+        type: "'solid' | 'outline'",
+        required: false,
+        controlType: 'select',
+        controlOptions: ['solid', 'outline']
+      },
+      {
+        name: 'size',
+        type: "'sm' | 'md'",
+        required: false,
+        controlType: 'select',
+        controlOptions: ['sm', 'md']
+      },
+      { name: 'children', type: 'React.ReactNode', required: true }
     ],
     dependencies: {
-      usesRouter: false, usesReactQuery: false, usesChakra: false,
-      usesShadcn: false, usesTamagui: false, usesGluestack: false,
-      usesReactNative: false, usesEmotion: false, usesTailwind: false,
-      usesFramerMotion: false, usesMSW: false, usesGlobalState: false,
-      otherImports: [],
+      usesRouter: false,
+      usesReactQuery: false,
+      usesChakra: false,
+      usesShadcn: false,
+      usesTamagui: false,
+      usesGluestack: false,
+      usesReactNative: false,
+      usesEmotion: false,
+      usesTailwind: false,
+      usesFramerMotion: false,
+      usesMSW: false,
+      usesGlobalState: false,
+      otherImports: []
     },
     suggestions: [],
     sourcePreview: '',
-    ...overrides,
+    ...overrides
   }
 }
 
 describe('docs-generator', () => {
-  it('starts with correct addon-docs/blocks import', async () => {
+  it('starts with correct @storybook/blocks import', async () => {
     const docs = await generateDocs(makeConfig(), makeAnalysis())
-    expect(docs.content).toMatch(/^import \{ Canvas, Meta, ArgTypes \} from '@storybook\/addon-docs\/blocks'/)
+    expect(docs.content).toMatch(
+      /^import \{ Canvas, Meta, ArgTypes \} from '@storybook\/blocks'/
+    )
   })
 
   it('does NOT contain YAML frontmatter', async () => {
@@ -65,7 +91,9 @@ describe('docs-generator', () => {
 
   it('imports stories as: import * as CardStories from ./Card.stories', async () => {
     const docs = await generateDocs(makeConfig(), makeAnalysis())
-    expect(docs.content).toContain("import * as CardStories from './Card.stories'")
+    expect(docs.content).toContain(
+      "import * as CardStories from './Card.stories'"
+    )
   })
 
   it('does NOT import the component directly from @/ path', async () => {

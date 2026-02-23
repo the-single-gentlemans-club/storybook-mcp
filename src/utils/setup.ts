@@ -5,7 +5,7 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { THRESHOLDS } from './constants.js'
+import { THRESHOLDS, DEFAULT_STORYBOOK_VERSION } from './constants.js'
 
 // ===========================================
 // Types
@@ -35,6 +35,7 @@ export interface SetupResult {
   dependencies: {
     dev: string[]
     prod: string[]
+    notices: string[]
   }
 }
 
@@ -90,6 +91,80 @@ export function detectFramework(rootDir: string): FrameworkType {
   } catch {
     return 'vanilla'
   }
+}
+
+/**
+ * Detect the Storybook version installed in the consumer project.
+ * Checks node_modules first (actual installed), then package.json declarations.
+ * Returns the bare version string (e.g. "10.3.1") or null if not found.
+ */
+export function detectInstalledStorybookVersion(
+  rootDir: string
+): string | null {
+  // 1. Check actual installed package
+  const nmSbPkg = path.join(
+    rootDir,
+    'node_modules',
+    'storybook',
+    'package.json'
+  )
+  if (fs.existsSync(nmSbPkg)) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(nmSbPkg, 'utf-8'))
+      if (typeof pkg.version === 'string') return pkg.version
+    } catch {
+      /* ignore */
+    }
+  }
+
+  // 2. Fall back to package.json declaration (strip ^ ~ >= < prefixes)
+  const packagePath = path.join(rootDir, 'package.json')
+  if (fs.existsSync(packagePath)) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf-8'))
+      const deps = {
+        ...(pkg.dependencies ?? {}),
+        ...(pkg.devDependencies ?? {})
+      }
+      const raw = deps['storybook'] ?? deps['@storybook/core']
+      if (typeof raw === 'string') {
+        return raw.replace(/^[\^~>=<\s]+/, '').split(/\s/)[0]
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return null
+}
+
+/**
+ * For Nx projects, detect the Storybook version that @nx/storybook was built for.
+ * Uses peerDependencies of @nx/storybook in node_modules, then falls back to
+ * the general installed-version check.
+ */
+export function detectNxStorybookVersion(rootDir: string): string | null {
+  const nxSbPkg = path.join(
+    rootDir,
+    'node_modules',
+    '@nx',
+    'storybook',
+    'package.json'
+  )
+  if (fs.existsSync(nxSbPkg)) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(nxSbPkg, 'utf-8'))
+      const peerDeps: Record<string, string> = pkg.peerDependencies ?? {}
+      const raw = peerDeps['storybook'] ?? peerDeps['@storybook/core']
+      if (typeof raw === 'string') {
+        return raw.replace(/^[\^~>=<\s]+/, '').split(/\s/)[0]
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return detectInstalledStorybookVersion(rootDir)
 }
 
 /**
@@ -211,18 +286,27 @@ function resolveNxLibPath(rootDir: string, nxLibName: string): string | null {
       if (depth > 2) return null
       const entries = fs.readdirSync(dir, { withFileTypes: true })
       for (const entry of entries) {
-        if (!entry.isDirectory() || entry.name.startsWith('.') || entry.name === 'node_modules') continue
+        if (
+          !entry.isDirectory() ||
+          entry.name.startsWith('.') ||
+          entry.name === 'node_modules'
+        )
+          continue
         const entryPath = path.join(dir, entry.name)
         const projectJsonPath = path.join(entryPath, 'project.json')
 
         if (fs.existsSync(projectJsonPath)) {
           // Check if project.json name matches
           try {
-            const project = JSON.parse(fs.readFileSync(projectJsonPath, 'utf-8'))
+            const project = JSON.parse(
+              fs.readFileSync(projectJsonPath, 'utf-8')
+            )
             if (project.name === nxLibName) {
               return path.relative(rootDir, entryPath).replace(/\\/g, '/')
             }
-          } catch { /* ignore */ }
+          } catch {
+            /* ignore */
+          }
 
           // Also check by derived name from path
           const nameParts = path.relative(baseDir, entryPath).split(path.sep)
@@ -254,10 +338,7 @@ function resolveNxLibPath(rootDir: string, nxLibName: string): string | null {
 function generateMainTs(config: SetupConfig): string {
   const { projectType, framework } = config
 
-  const addons: string[] = [
-    '@storybook/addon-docs',
-    '@storybook/addon-a11y',
-  ]
+  const addons: string[] = ['@storybook/addon-docs', '@storybook/addon-a11y']
 
   // Detect if this is a React Native/Expo project
   const packagePath = path.join(config.rootDir, 'package.json')
@@ -273,9 +354,7 @@ function generateMainTs(config: SetupConfig): string {
   }
 
   // Stories glob — include app directory for React Native/Expo projects
-  const storiesGlob = [
-    '../src/**/*.@(mdx|stories.@(js|jsx|ts|tsx))',
-  ]
+  const storiesGlob = ['../src/**/*.@(mdx|stories.@(js|jsx|ts|tsx))']
 
   // Add app directory for Expo Router / React Native projects
   if (isReactNative) {
@@ -555,33 +634,67 @@ function getScripts(config: SetupConfig): PackageScripts {
 // Dependencies
 // ===========================================
 
-interface Dependencies {
+export interface Dependencies {
   dev: string[]
   prod: string[]
+  /** Notices to display to the user (e.g. upgrade prompts) */
+  notices: string[]
 }
 
 function getDependencies(config: SetupConfig): Dependencies {
-  const { framework } = config
+  const { framework, projectType, rootDir } = config
+  const notices: string[] = []
+
+  // Resolve which Storybook version to pin the install suggestions to.
+  // - Nx: match whatever version @nx/storybook was built for
+  // - Standard with SB ≥10 installed: use that exact version
+  // - Standard with SB <10: keep their version but emit an upgrade prompt
+  // - Nothing installed yet: default to 10.2.0
+  let sbVersion: string
+
+  if (projectType === 'nx') {
+    const nxVersion = detectNxStorybookVersion(rootDir)
+    sbVersion = nxVersion ?? DEFAULT_STORYBOOK_VERSION
+  } else {
+    const installed = detectInstalledStorybookVersion(rootDir)
+    if (installed) {
+      const major = parseInt(installed.split('.')[0], 10)
+      if (major >= 10) {
+        sbVersion = installed
+      } else {
+        notices.push(
+          `⚠️  Storybook ${installed} detected — v10+ is required for full compatibility.\n` +
+            `   Run: npx storybook@latest upgrade`
+        )
+        sbVersion = installed
+      }
+    } else {
+      // Fresh install — default to latest stable 10
+      sbVersion = DEFAULT_STORYBOOK_VERSION
+    }
+  }
+
+  const sbRange = `^${sbVersion}`
 
   const dev: string[] = [
-    'storybook@^10.2.0',
-    '@storybook/react@^10.2.0',
-    '@storybook/addon-docs@^10.2.0',
-    '@storybook/addon-a11y@^10.2.0'
+    `storybook@${sbRange}`,
+    `@storybook/react@${sbRange}`,
+    `@storybook/addon-docs@${sbRange}`,
+    `@storybook/addon-a11y@${sbRange}`
   ]
 
   // Add framework-specific bundler
   if (framework === 'tamagui') {
-    dev.push('@storybook/react-webpack5@^10.2.0')
+    dev.push(`@storybook/react-webpack5@${sbRange}`)
     dev.push('@storybook/test-runner@^0.24.0')
   } else {
-    dev.push('@storybook/react-vite@^10.2.0')
+    dev.push(`@storybook/react-vite@${sbRange}`)
     // Vitest addon is recommended for Vite-based projects in SB 10+
-    dev.push('@storybook/addon-vitest@^10.2.0')
+    dev.push(`@storybook/addon-vitest@${sbRange}`)
   }
 
   // Add Nx-specific if needed
-  if (config.projectType === 'nx') {
+  if (projectType === 'nx') {
     dev.push('@nx/storybook@latest')
   }
 
@@ -603,7 +716,7 @@ function getDependencies(config: SetupConfig): Dependencies {
       break
   }
 
-  return { dev, prod }
+  return { dev, prod, notices }
 }
 
 // ===========================================
@@ -652,6 +765,11 @@ export async function runSetup(
   if (nxLibName) {
     console.log(`  Nx Library: ${nxLibName}`)
   }
+
+  // Print any version-related notices (e.g. upgrade prompts)
+  for (const notice of result.dependencies.notices) {
+    console.log(`\n  ${notice}`)
+  }
   console.log('')
 
   // Determine where .storybook config should live
@@ -661,8 +779,12 @@ export async function runSetup(
     const targetLib = nxLibName || '<project-name>'
 
     if (!nxLibName) {
-      console.log('  ⚠️  Could not auto-detect an Nx library. Use --lib=<name> to specify one.')
-      console.log(`     npx forgekit-storybook-mcp --setup --lib=<project-name>`)
+      console.log(
+        '  ⚠️  Could not auto-detect an Nx library. Use --lib=<name> to specify one.'
+      )
+      console.log(
+        `     npx forgekit-storybook-mcp --setup --lib=<project-name>`
+      )
       console.log('')
       return result
     }
@@ -670,7 +792,9 @@ export async function runSetup(
     // Resolve actual lib path
     const libBasePath = resolveNxLibPath(rootDir, nxLibName)
     if (!libBasePath) {
-      console.log(`  ⚠️  Could not find library "${nxLibName}" in libs/ or packages/`)
+      console.log(
+        `  ⚠️  Could not find library "${nxLibName}" in libs/ or packages/`
+      )
       console.log('')
       return result
     }
@@ -683,7 +807,9 @@ export async function runSetup(
       path.join(rootDir, 'node_modules', '@nx', 'storybook')
     )
     if (nxStorybookInstalled) {
-      console.log(`  💡 Tip: You can also use \`npx nx g @nx/storybook:configuration ${targetLib}\` for Nx-native setup`)
+      console.log(
+        `  💡 Tip: You can also use \`npx nx g @nx/storybook:configuration ${targetLib}\` for Nx-native setup`
+      )
     }
     console.log('')
   } else {
@@ -848,7 +974,9 @@ export async function runSetup(
       const deps = { ...pkg.dependencies, ...pkg.devDependencies }
       if (!deps['react-native-web']) {
         result.dependencies.dev.push('react-native-web@^0.21.2')
-        console.log(`  💡 Note: Add react-native-web to your dependencies for Storybook`)
+        console.log(
+          `  💡 Note: Add react-native-web to your dependencies for Storybook`
+        )
       }
     } else {
       console.log(

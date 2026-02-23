@@ -61,7 +61,12 @@ export async function runPreflight(rootDir: string): Promise<PreflightResult> {
 
 function packageExists(rootDir: string, pkg: string): boolean {
   try {
-    const pkgJson = path.join(rootDir, 'node_modules', ...pkg.split('/'), 'package.json')
+    const pkgJson = path.join(
+      rootDir,
+      'node_modules',
+      ...pkg.split('/'),
+      'package.json'
+    )
     return fs.existsSync(pkgJson)
   } catch {
     return false
@@ -70,7 +75,12 @@ function packageExists(rootDir: string, pkg: string): boolean {
 
 function readPackageVersion(rootDir: string, pkg: string): string | null {
   try {
-    const pkgJson = path.join(rootDir, 'node_modules', ...pkg.split('/'), 'package.json')
+    const pkgJson = path.join(
+      rootDir,
+      'node_modules',
+      ...pkg.split('/'),
+      'package.json'
+    )
     const data = JSON.parse(fs.readFileSync(pkgJson, 'utf-8'))
     return data.version ?? null
   } catch {
@@ -86,8 +96,18 @@ function readFileIfExists(filePath: string): string | null {
   }
 }
 
-function checkRequiredPackages(rootDir: string, checks: PreflightCheck[], installCommands: string[]) {
-  const required = ['storybook', '@storybook/react', '@storybook/addon-docs', 'react', 'react-dom']
+function checkRequiredPackages(
+  rootDir: string,
+  checks: PreflightCheck[],
+  installCommands: string[]
+) {
+  const required = [
+    'storybook',
+    '@storybook/react',
+    '@storybook/addon-docs',
+    'react',
+    'react-dom'
+  ]
   const missing: string[] = []
 
   for (const pkg of required) {
@@ -96,7 +116,7 @@ function checkRequiredPackages(rootDir: string, checks: PreflightCheck[], instal
       name: `package:${pkg}`,
       status: exists ? 'pass' : 'fail',
       message: exists ? `${pkg} is installed` : `${pkg} is not installed`,
-      fix: exists ? undefined : `npm install -D ${pkg}`,
+      fix: exists ? undefined : `npm install -D ${pkg}`
     })
     if (!exists) missing.push(pkg)
   }
@@ -108,14 +128,15 @@ function checkRequiredPackages(rootDir: string, checks: PreflightCheck[], instal
     checks.push({
       name: 'package:framework',
       status: 'pass',
-      message: `Framework package installed: ${hasVite ? '@storybook/react-vite' : '@storybook/react-webpack5'}`,
+      message: `Framework package installed: ${hasVite ? '@storybook/react-vite' : '@storybook/react-webpack5'}`
     })
   } else {
     checks.push({
       name: 'package:framework',
       status: 'fail',
-      message: 'No Storybook framework package found (@storybook/react-vite or @storybook/react-webpack5)',
-      fix: 'npm install -D @storybook/react-vite',
+      message:
+        'No Storybook framework package found (@storybook/react-vite or @storybook/react-webpack5)',
+      fix: 'npm install -D @storybook/react-vite'
     })
     missing.push('@storybook/react-vite')
   }
@@ -133,15 +154,15 @@ function checkStorybookVersion(rootDir: string, checks: PreflightCheck[]) {
   if (major < 10) {
     checks.push({
       name: 'version:storybook',
-      status: 'warn',
-      message: `Storybook ${sbVersion} detected — version 10+ recommended`,
-      fix: 'npx storybook@latest upgrade',
+      status: 'fail',
+      message: `Storybook ${sbVersion} detected — v10+ is required`,
+      fix: 'npx storybook@latest upgrade'
     })
   } else {
     checks.push({
       name: 'version:storybook',
       status: 'pass',
-      message: `Storybook ${sbVersion} installed`,
+      message: `Storybook ${sbVersion} installed`
     })
   }
 
@@ -155,13 +176,13 @@ function checkStorybookVersion(rootDir: string, checks: PreflightCheck[]) {
         name: 'version:mismatch',
         status: 'warn',
         message: `Version mismatch: storybook@${sbVersion} vs @storybook/react@${reactVersion}`,
-        fix: 'Ensure storybook and @storybook/react are the same version',
+        fix: 'Ensure storybook and @storybook/react are the same version'
       })
     } else {
       checks.push({
         name: 'version:mismatch',
         status: 'pass',
-        message: 'storybook and @storybook/react versions match',
+        message: 'storybook and @storybook/react versions match'
       })
     }
   }
@@ -177,7 +198,7 @@ function checkMainConfig(rootDir: string, checks: PreflightCheck[]) {
       name: 'config:main',
       status: 'warn',
       message: 'No .storybook/main.ts or main.js found',
-      fix: 'Run npx forgekit-storybook-mcp --setup to create config',
+      fix: 'Run npx forgekit-storybook-mcp --setup to create config'
     })
     return
   }
@@ -190,7 +211,7 @@ function checkMainConfig(rootDir: string, checks: PreflightCheck[]) {
         name: `config:main:addon:${addon}`,
         status: 'warn',
         message: `${addon} should be in addons array for SB10`,
-        fix: `Add '${addon}' to addons array in .storybook/main`,
+        fix: `Add '${addon}' to addons array in .storybook/main`
       })
     }
   }
@@ -199,7 +220,7 @@ function checkMainConfig(rootDir: string, checks: PreflightCheck[]) {
   const deprecatedAddons = [
     '@storybook/addon-essentials',
     '@storybook/addon-interactions',
-    '@storybook/addon-links',
+    '@storybook/addon-links'
   ]
   for (const addon of deprecatedAddons) {
     if (content.includes(addon)) {
@@ -207,7 +228,7 @@ function checkMainConfig(rootDir: string, checks: PreflightCheck[]) {
         name: `config:main:addon:${addon}`,
         status: 'warn',
         message: `${addon} is bundled into storybook in v10 — can be removed from addons list`,
-        fix: `Remove '${addon}' from addons array in .storybook/main`,
+        fix: `Remove '${addon}' from addons array in .storybook/main`
       })
     }
   }
@@ -220,15 +241,21 @@ function checkMainConfig(rootDir: string, checks: PreflightCheck[]) {
       name: 'config:main:framework',
       status: 'warn',
       message: 'No framework configuration found in .storybook/main',
-      fix: "Add framework: { name: '@storybook/react-vite' } to main config",
+      fix: "Add framework: { name: '@storybook/react-vite' } to main config"
     })
   }
 }
 
 function checkPreviewConfig(rootDir: string, checks: PreflightCheck[]) {
-  const previewTs = readFileIfExists(path.join(rootDir, '.storybook', 'preview.ts'))
-  const previewTsx = readFileIfExists(path.join(rootDir, '.storybook', 'preview.tsx'))
-  const previewJs = readFileIfExists(path.join(rootDir, '.storybook', 'preview.js'))
+  const previewTs = readFileIfExists(
+    path.join(rootDir, '.storybook', 'preview.ts')
+  )
+  const previewTsx = readFileIfExists(
+    path.join(rootDir, '.storybook', 'preview.tsx')
+  )
+  const previewJs = readFileIfExists(
+    path.join(rootDir, '.storybook', 'preview.js')
+  )
   const content = previewTs ?? previewTsx ?? previewJs
 
   if (!content) return // preview is optional
@@ -238,8 +265,9 @@ function checkPreviewConfig(rootDir: string, checks: PreflightCheck[]) {
     checks.push({
       name: 'config:preview:argTypesRegex',
       status: 'warn',
-      message: 'argTypesRegex is deprecated in SB10 — actions are now auto-detected',
-      fix: "Remove the argTypesRegex line from preview config",
+      message:
+        'argTypesRegex is deprecated in SB10 — actions are now auto-detected',
+      fix: 'Remove the argTypesRegex line from preview config'
     })
   }
 
@@ -248,8 +276,9 @@ function checkPreviewConfig(rootDir: string, checks: PreflightCheck[]) {
     checks.push({
       name: 'config:preview:testing-library',
       status: 'warn',
-      message: "@storybook/testing-library is deprecated — use 'storybook/test' in SB10",
-      fix: "Replace imports from '@storybook/testing-library' with 'storybook/test'",
+      message:
+        "@storybook/testing-library is deprecated — use 'storybook/test' in SB10",
+      fix: "Replace imports from '@storybook/testing-library' with 'storybook/test'"
     })
   }
 
@@ -259,7 +288,7 @@ function checkPreviewConfig(rootDir: string, checks: PreflightCheck[]) {
       name: 'config:preview:jest',
       status: 'warn',
       message: "@storybook/jest is deprecated — use 'storybook/test' in SB10",
-      fix: "Replace imports from '@storybook/jest' with 'storybook/test'",
+      fix: "Replace imports from '@storybook/jest' with 'storybook/test'"
     })
   }
 }

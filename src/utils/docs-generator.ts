@@ -8,7 +8,7 @@ import path from 'node:path'
 import type {
   StorybookMCPConfig,
   ComponentAnalysis,
-  PropDefinition,
+  PropDefinition
 } from '../types.js'
 import { toKebabCase } from './scanner.js'
 import { FILE_EXTENSIONS } from './constants.js'
@@ -23,16 +23,28 @@ export interface GeneratedDocs {
  */
 export async function generateDocs(
   config: StorybookMCPConfig,
-  analysis: ComponentAnalysis
+  analysis: ComponentAnalysis,
+  /** Names of story exports that actually exist in the story file.
+   * When provided, Canvas blocks are only emitted for exports that are
+   * present in this list, preventing broken `of={}` references.
+   * When omitted, Canvas blocks are emitted based on analysis alone. */
+  availableExports?: string[]
 ): Promise<GeneratedDocs> {
   const { name, props, dependencies } = analysis
   const kebabName = toKebabCase(name)
   const docsPath = buildDocsPath(analysis.filePath)
-  
-  const storiesImportName = `${name}Stories`
-  const storiesFileName = path.basename(analysis.filePath, path.extname(analysis.filePath))
 
-  let content = `import { Canvas, Meta, ArgTypes } from '@storybook/addon-docs/blocks'
+  /** Returns true when the story export `exportName` is safe to reference. */
+  const hasExport = (exportName: string): boolean =>
+    availableExports === undefined || availableExports.includes(exportName)
+
+  const storiesImportName = `${name}Stories`
+  const storiesFileName = path.basename(
+    analysis.filePath,
+    path.extname(analysis.filePath)
+  )
+
+  let content = `import { Canvas, Meta, ArgTypes } from '@storybook/blocks'
 import * as ${storiesImportName} from './${storiesFileName}.stories'
 
 <Meta of={${storiesImportName}} />
@@ -56,7 +68,7 @@ ${generateDescription(name, props, dependencies)}
 
   // Add variants section if applicable
   const variantProp = props.find(p => p.name === 'variant' && p.controlOptions)
-  if (variantProp?.controlOptions) {
+  if (variantProp?.controlOptions && hasExport('Variants')) {
     content += `
 ### Variants
 
@@ -72,7 +84,7 @@ ${variantProp.controlOptions.map(v => `<${name} variant="${v}">${v}</${name}>`).
 
   // Add sizes section if applicable
   const sizeProp = props.find(p => p.name === 'size' && p.controlOptions)
-  if (sizeProp?.controlOptions) {
+  if (sizeProp?.controlOptions && hasExport('Sizes')) {
     content += `
 ### Sizes
 
@@ -135,7 +147,7 @@ ${generateRelatedComponents(name, dependencies)}
 
   return {
     content,
-    filePath: docsPath,
+    filePath: docsPath
   }
 }
 
@@ -148,7 +160,7 @@ function generateDescription(
   dependencies: ComponentAnalysis['dependencies']
 ): string {
   const features: string[] = []
-  
+
   if (props.some(p => p.name === 'variant')) {
     features.push('multiple visual variants')
   }
@@ -165,7 +177,7 @@ function generateDescription(
   if (features.length > 0) {
     return `The \`${name}\` component provides ${features.join(', ')}.`
   }
-  
+
   return `The \`${name}\` component is a reusable UI element.`
 }
 
@@ -174,14 +186,15 @@ function generateDescription(
  */
 function generateExampleProps(props: PropDefinition[]): string {
   const exampleProps: string[] = []
-  
+
   const variantProp = props.find(p => p.name === 'variant' && p.controlOptions)
   if (variantProp?.controlOptions?.[0]) {
     exampleProps.push(`variant="${variantProp.controlOptions[0]}"`)
   }
-  
+
   const sizeProp = props.find(p => p.name === 'size' && p.controlOptions)
-  if (sizeProp?.controlOptions?.[1]) { // Use middle size
+  if (sizeProp?.controlOptions?.[1]) {
+    // Use middle size
     exampleProps.push(`size="${sizeProp.controlOptions[1]}"`)
   }
 
@@ -217,7 +230,7 @@ function generateA11ySection(name: string, props: PropDefinition[]): string {
   const features: string[] = [
     '- Supports keyboard navigation',
     '- Includes proper ARIA attributes',
-    '- Compatible with screen readers',
+    '- Compatible with screen readers'
   ]
 
   if (props.some(p => p.name === 'disabled')) {
@@ -239,14 +252,23 @@ function generateA11ySection(name: string, props: PropDefinition[]): string {
 /**
  * Check if component has notable dependencies
  */
-function hasNotableDependencies(deps: ComponentAnalysis['dependencies']): boolean {
-  return deps.usesRouter || deps.usesReactQuery || deps.usesGlobalState || deps.usesMSW
+function hasNotableDependencies(
+  deps: ComponentAnalysis['dependencies']
+): boolean {
+  return (
+    deps.usesRouter ||
+    deps.usesReactQuery ||
+    deps.usesGlobalState ||
+    deps.usesMSW
+  )
 }
 
 /**
  * Generate integration notes
  */
-function generateIntegrationNotes(deps: ComponentAnalysis['dependencies']): string {
+function generateIntegrationNotes(
+  deps: ComponentAnalysis['dependencies']
+): string {
   const notes: string[] = []
 
   if (deps.usesRouter) {
@@ -293,15 +315,19 @@ This component relies on global state. Ensure the appropriate store provider is 
  */
 function generateBestPractices(name: string, props: PropDefinition[]): string {
   const practices = [
-    `1. **Accessibility**: Always provide meaningful content or aria-label`,
+    `1. **Accessibility**: Always provide meaningful content or aria-label`
   ]
 
   if (props.some(p => p.name === 'variant')) {
-    practices.push(`2. **Variants**: Choose the appropriate variant for the context (e.g., primary actions vs secondary)`)
+    practices.push(
+      `2. **Variants**: Choose the appropriate variant for the context (e.g., primary actions vs secondary)`
+    )
   }
 
   if (props.some(p => p.name === 'size')) {
-    practices.push(`3. **Sizing**: Use consistent sizes within the same section of your UI`)
+    practices.push(
+      `3. **Sizing**: Use consistent sizes within the same section of your UI`
+    )
   }
 
   practices.push(
@@ -553,16 +579,16 @@ export async function writeDocsFile(
   overwrite: boolean = false
 ): Promise<boolean> {
   const fullPath = path.join(config.rootDir, docs.filePath)
-  
+
   if (fs.existsSync(fullPath) && !overwrite) {
     return false
   }
-  
+
   const dir = path.dirname(fullPath)
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true })
   }
-  
+
   fs.writeFileSync(fullPath, docs.content, 'utf-8')
   return true
 }

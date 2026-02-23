@@ -169,6 +169,20 @@ function fileExists(rootDir: string, relativePath: string): boolean {
   return fs.existsSync(path.join(rootDir, relativePath))
 }
 
+/**
+ * Extract named story exports (`export const Foo: Story`) from story file content.
+ * Used to ensure MDX Canvas blocks only reference exports that actually exist.
+ */
+function extractStoryExports(storyContent: string): string[] {
+  const pattern = /export const (\w+):\s*Story/g
+  const names: string[] = []
+  let match: RegExpExecArray | null
+  while ((match = pattern.exec(storyContent)) !== null) {
+    names.push(match[1])
+  }
+  return names
+}
+
 // ===========================================
 // Main Initialization Function
 // ===========================================
@@ -355,6 +369,8 @@ async function syncComponent(
   }
 
   // --- Stories ---
+  // Track exported story names so docs Canvas blocks only reference existing exports.
+  let availableStoryExports: string[] | undefined
   if (shouldGenStories) {
     const storyPath = getStoryPath(component.filePath)
     const storyExists = fileExists(config.rootDir, storyPath)
@@ -367,6 +383,8 @@ async function syncComponent(
         includeVariants: true,
         includeInteractive: true
       })
+
+      availableStoryExports = extractStoryExports(story.content)
 
       if (!dryRun) {
         await writeStoryFile(config, story, true)
@@ -383,6 +401,8 @@ async function syncComponent(
         overwrite: true
       })
 
+      availableStoryExports = extractStoryExports(story.content)
+
       if (!dryRun) {
         await writeStoryFile(config, story, true)
       }
@@ -393,6 +413,13 @@ async function syncComponent(
         reason: 'component changed'
       }
     } else {
+      // Story unchanged — read existing file to learn what exports it has
+      const storyFullPath = path.join(config.rootDir, storyPath)
+      if (fs.existsSync(storyFullPath)) {
+        availableStoryExports = extractStoryExports(
+          fs.readFileSync(storyFullPath, 'utf-8')
+        )
+      }
       result.story = { action: 'unchanged', path: storyPath }
     }
   }
@@ -436,7 +463,11 @@ async function syncComponent(
 
     if (!docsExists) {
       const componentAnalysis = await getAnalysis()
-      const docs = await generateDocs(config, componentAnalysis)
+      const docs = await generateDocs(
+        config,
+        componentAnalysis,
+        availableStoryExports
+      )
 
       if (!dryRun) {
         await writeDocsFile(config, docs)
@@ -445,7 +476,11 @@ async function syncComponent(
       result.docs = { action: 'created', path: docsPath }
     } else if (updateExisting && componentChanged) {
       const componentAnalysis = await getAnalysis()
-      const docs = await generateDocs(config, componentAnalysis)
+      const docs = await generateDocs(
+        config,
+        componentAnalysis,
+        availableStoryExports
+      )
 
       if (!dryRun) {
         await writeDocsFile(config, docs, true)
