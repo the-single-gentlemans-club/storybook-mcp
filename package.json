@@ -1,6 +1,6 @@
 {
   "name": "forgekit-storybook-mcp",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Open-source (MIT) Storybook MCP — companion to the ForgeKit Nx/UI/Storybook generator suite; published unscoped because @forgekit is taken on npm",
   "author": "Rich Tillman <richtillman@gmail.com>",
   "license": "MIT",
