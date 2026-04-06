@@ -16,7 +16,6 @@ import {
   initializeComponents,
   syncSingleComponent
 } from './utils/initializer.js'
-import { validateLicense, requireFeature } from './utils/license.js'
 import { runPreflight } from './utils/preflight.js'
 import { mergeStories, parseStoryExports } from './utils/story-merger.js'
 import { recordStoryVersion, hashContent } from './utils/story-history.js'
@@ -89,14 +88,6 @@ export async function generateStoryTool(
     dryRun?: boolean
   }
 ) {
-  // Check license
-  const license = validateLicense(config)
-
-  // Check template restrictions
-  if (args.template && args.template !== 'basic') {
-    requireFeature('advanced_templates', license)
-  }
-
   // First analyze the component
   const analysis = await analyzeComponent(config, args.componentPath)
 
@@ -110,7 +101,6 @@ export async function generateStoryTool(
     overwrite: args.overwrite ?? false
   }
 
-  // Add template if provided (already validated for license)
   if (args.template) {
     storyOptions.template = args.template as StoryGenerationOptions['template']
   }
@@ -188,12 +178,6 @@ export async function getStoryTemplate(
     template: string
   }
 ) {
-  // Check license
-  const license = validateLicense(config)
-  if (args.template !== 'basic') {
-    requireFeature('advanced_templates', license)
-  }
-
   const template = getTemplate(args.template)
 
   if (!template) {
@@ -214,28 +198,18 @@ export async function getStoryTemplate(
  * Tool: list_templates
  * List all available story templates
  */
-export async function listTemplates(config: StorybookMCPConfig) {
-  // Check license
-  const license = validateLicense(config)
-  const isPro = license.tier === 'pro'
-
-  // Filter templates based on license
+export async function listTemplates(_config: StorybookMCPConfig) {
   const templates = getTemplates()
-  const list = Array.from(templates.entries()).map(([name, template]) => {
-    const isBasic = name === 'basic'
-    return {
-      name,
-      description:
-        template.description + (isBasic || isPro ? '' : ' (Pro Only)'),
-      useCase: template.useCase,
-      available: isBasic || isPro
-    }
-  })
+  const list = Array.from(templates.entries()).map(([name, template]) => ({
+    name,
+    description: template.description,
+    useCase: template.useCase,
+    available: true
+  }))
 
   return {
     templates: list,
-    count: list.length,
-    tier: license.tier
+    count: list.length
   }
 }
 
@@ -332,10 +306,6 @@ export async function syncAll(
     dryRun?: boolean
   }
 ) {
-  // Check license for limits
-  const license = validateLicense(config)
-
-  // If requesting features not allowed in free tier, warn/disable them
   const options = {
     library: args?.library,
     generateStories: args?.generateStories ?? true,
@@ -345,23 +315,7 @@ export async function syncAll(
     dryRun: args?.dryRun ?? false
   }
 
-  const result = await initializeComponents(config, {
-    ...options,
-    maxComponents:
-      license.maxSyncLimit === Infinity ? undefined : license.maxSyncLimit
-  })
-
-  // Notify if sync limit was applied
-  if (
-    license.tier === 'free' &&
-    result.scanned > (license.maxSyncLimit || Infinity)
-  ) {
-    return {
-      ...result,
-      summary: `Free Tier Limit: Synced first ${license.maxSyncLimit} of ${result.scanned} components. Upgrade to Pro for unlimited sync.`,
-      warning: `Sync limit reached (${license.maxSyncLimit} components max for Free Tier)`
-    }
-  }
+  const result = await initializeComponents(config, options)
 
   return {
     ...result,
@@ -483,7 +437,6 @@ export async function generateDocsTool(
 /**
  * Tool: update_story
  * Update an existing story — regenerates template sections while preserving user-added exports.
- * Pro tier only.
  */
 export async function updateStoryTool(
   config: StorybookMCPConfig,
@@ -497,10 +450,6 @@ export async function updateStoryTool(
     dryRun?: boolean
   }
 ) {
-  // Pro only
-  const license = validateLicense(config)
-  requireFeature('advanced_templates', license)
-
   // Analyze component
   const analysis = await analyzeComponent(config, args.componentPath)
 
@@ -587,7 +536,6 @@ export async function updateStoryTool(
 /**
  * Tool: generate_code_connect
  * Generate a @figma/code-connect .figma.tsx file linking the component to Figma dev mode.
- * Pro tier only.
  */
 export async function generateCodeConnectTool(
   config: StorybookMCPConfig,
@@ -598,9 +546,6 @@ export async function generateCodeConnectTool(
     dryRun?: boolean
   }
 ) {
-  const license = validateLicense(config)
-  requireFeature('code_connect', license)
-
   const analysis = await analyzeComponent(config, args.componentPath)
   const cc = await generateCodeConnect(config, analysis, args.figmaNodeUrl)
 

@@ -1,0 +1,6 @@
+{
+  "name": "storybook-mcp-smoke-fixture",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Minimal fixture for MCP stdio smoke tests — no install required"
+}

@@ -38,27 +38,6 @@ Add Storybook MCP to your Cursor MCP settings:
   </Step>
 </Steps>
 
-## Pro License
-
-If you have a Pro license, add it to your configuration:
-
-```json
-{
-  "storybook-mcp": {
-    "command": "npx",
-    "args": ["-y", "storybook-mcp"],
-    "cwd": "${workspaceFolder}",
-    "env": {
-      "STORYBOOK_MCP_LICENSE": "your-license-key-here"
-    }
-  }
-}
-```
-
-<Tip>
-  Or create a `.env` file in your project root with `STORYBOOK_MCP_LICENSE=your-key`
-</Tip>
-
 ## Multi-Project Setup
 
 For workspaces with multiple projects:
@@ -153,7 +132,7 @@ Cursor understands natural language requests:
 "What's the story coverage for each library?"
 ```
 
-```plaintext Pro Features
+```plaintext Generation examples
 "Generate Playwright tests for all form components"
 
 "Create MDX documentation for the Card component"
@@ -238,17 +217,6 @@ Enable verbose logging:
     Should show all 13 tools. If not, restart Cursor.
   </Accordion>
 
-  <Accordion icon="circle-exclamation" title="License not recognized">
-    Verify license key in env:
-    ```json
-    "env": {
-      "STORYBOOK_MCP_LICENSE": "your-actual-key"
-    }
-    ```
-
-    Or create `.env` file in project root.
-  </Accordion>
-
   <Accordion icon="circle-exclamation" title="Wrong project directory">
     Make sure `cwd` points to your project root:
     ```json
@@ -276,7 +244,7 @@ Enable verbose logging:
   <Card title="Quickstart" icon="play" href="/quickstart">
     5-minute tutorial
   </Card>
-  <Card title="Pro License" icon="star" href="/license/pricing">
-    Unlock advanced features
+  <Card title="License" icon="scale-balanced" href="/license">
+    MIT open-source license
   </Card>
 </CardGroup>

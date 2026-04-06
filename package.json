@@ -1,7 +1,7 @@
 {
   "name": "forgekit-storybook-mcp",
-  "version": "1.1.5",
-  "description": "MCP server for Storybook story generation, component analysis, and validation",
+  "version": "1.2.0",
+  "description": "Open-source (MIT) Storybook MCP — companion to the ForgeKit Nx/UI/Storybook generator suite; published unscoped because @forgekit is taken on npm",
   "author": "Rich Tillman <richtillman@gmail.com>",
   "license": "MIT",
   "type": "module",
@@ -19,7 +19,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "test": "npx vitest run",
@@ -31,6 +32,8 @@
     "docs:generate": "npx tsx scripts/generate-docs.ts",
     "docs:dev": "npx mintlify dev",
     "typecheck": "npx tsc --noEmit",
+    "smoke": "node scripts/smoke-mcp.mjs",
+    "verify": "npm run typecheck && npm run build && npm test && npm run smoke",
     "publish:npm": "npm publish --access public",
     "prerelease": "git diff --exit-code && git diff --staged --exit-code",
     "release": "npm run build && npm publish --access public && git push && git push --tags",
@@ -66,10 +69,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/the-single-gentlemans-club/storybook-mcp.git"
+    "url": "git+https://github.com/effinrich/storybook-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/the-single-gentlemans-club/storybook-mcp/issues"
+    "url": "https://github.com/effinrich/storybook-mcp/issues"
   },
-  "homepage": "https://forgekit.cloud"
+  "homepage": "https://github.com/effinrich/storybook-mcp#readme"
 }

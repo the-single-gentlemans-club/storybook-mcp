@@ -18,7 +18,6 @@ src/
     scanner.ts          → Component discovery (fast-glob) + prop/dependency extraction via regex
     generator.ts        → Story file generation (framework-aware: Chakra/shadcn/RN/etc.)
     initializer.ts      → Startup sync engine: MD5 hash diff via .storybook-mcp-cache.json; file watcher
-    license.ts          → Polar license validation, 24h file cache, feature gating
     setup.ts            → Storybook bootstrapper: .storybook/ config, Nx monorepo detection
     templates.ts        → 8 built-in story templates (basic, with-controls, with-msw, form, etc.)
     validator.ts        → Story validator: 8 rule categories, 0-100 score
@@ -103,7 +102,7 @@ Always handle all framework branches when modifying generation logic.
 | Add MCP tool | `src/index.ts`, `src/tools.ts`, `src/utils/*.ts` |
 | Change story output | `src/utils/generator.ts`, `src/utils/templates.ts` |
 | Modify component scanning | `src/utils/scanner.ts` |
-| License / pricing | `src/utils/license.ts`, `src/utils/constants.ts` |
+| Shared constants | `src/utils/constants.ts` |
 | Startup / file watching | `src/cli.ts`, `src/utils/initializer.ts` |
 | Framework support | `src/utils/setup.ts`, `src/utils/generator.ts`, `src/utils/scanner.ts` |
 | Figma Code Connect | `src/utils/code-connect-generator.ts` |

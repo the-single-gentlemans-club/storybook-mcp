@@ -627,6 +627,8 @@ interface PackageScripts {
   storybook: string
   'build-storybook': string
   'test-storybook': string
+  /** Optional lifecycle hook — injected so scaffold cleanup runs before Storybook */
+  prestorybook?: string
 }
 
 function getScripts(config: SetupConfig): PackageScripts {

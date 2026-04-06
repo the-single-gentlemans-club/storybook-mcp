@@ -22,15 +22,12 @@ import {
   startFileWatcher,
   removeScaffoldConflicts
 } from './utils/initializer.js'
-import { validateLicenseAsync, resetLicenseCache } from './utils/license.js'
 import { runSetup } from './utils/setup.js'
 import { runPreflight } from './utils/preflight.js'
-import { POLAR_UPGRADE_URL, FREE_TIER_MAX_SYNC } from './utils/constants.js'
 
 /**
  * Load environment variables from .env and .env.local files in the project directory.
  * Values from .env.local override .env, but neither overrides existing process.env values.
- * This allows STORYBOOK_MCP_LICENSE and other vars to be stored in .env.local.
  */
 function loadEnvFiles(cwd: string): void {
   const envFiles = ['.env', '.env.local'] // .env.local wins over .env
@@ -77,11 +74,6 @@ function loadEnvFiles(cwd: string): void {
       `[storybook-mcp] Loaded ${loaded} env var(s) from .env/.env.local`
     )
   }
-
-  // Confirm license key presence (value masked)
-  if (process.env.STORYBOOK_MCP_LICENSE) {
-    console.error('[storybook-mcp] STORYBOOK_MCP_LICENSE is set in environment')
-  }
 }
 
 /**
@@ -111,7 +103,6 @@ function writeConfigFile(
   if (config.storybookVersion)
     persisted.storybookVersion = config.storybookVersion
   if (config.templatesDir) persisted.templatesDir = config.templatesDir
-  // NOTE: licenseKey intentionally omitted — keep it in env vars / .env.local
 
   try {
     fs.writeFileSync(
@@ -131,6 +122,7 @@ function writeConfigFile(
 // Parse CLI arguments
 function parseArgs(): {
   skipInit: boolean
+  noPreflight: boolean
   dryRun: boolean
   initOnly: boolean
   noStories: boolean
@@ -140,7 +132,6 @@ function parseArgs(): {
   help: boolean
   setup: boolean
   force: boolean
-  resetLicense: boolean
   noWatch: boolean
   cleanupOnly: boolean
   libName?: string
@@ -156,6 +147,7 @@ function parseArgs(): {
 
   return {
     skipInit: args.includes('--skip-init'),
+    noPreflight: args.includes('--no-preflight'),
     dryRun: args.includes('--dry-run'),
     initOnly: args.includes('--init-only'),
     noStories: args.includes('--no-stories'),
@@ -165,7 +157,6 @@ function parseArgs(): {
     help: args.includes('--help') || args.includes('-h'),
     setup: args.includes('--setup'),
     force: args.includes('--force'),
-    resetLicense: args.includes('--reset-license'),
     noWatch: args.includes('--no-watch'),
     cleanupOnly: args.includes('--cleanup-only'),
     libName
@@ -191,13 +182,13 @@ OPTIONS:
   --cleanup-only  Remove Storybook scaffold files that conflict with generated stories, then exit
   --dry-run       Show what would be created without writing files
   --skip-init     Skip initial component sync
+  --no-preflight  Skip Storybook/npm dependency checks (automation / smoke tests)
   --no-stories    Don't generate story files
   --no-tests      Don't generate test files  
   --no-docs       Don't generate MDX docs
   --no-update     Don't update existing files
   --no-watch      Disable background file watching (watcher is on by default)
   --force         Overwrite existing files
-  --reset-license Clear the cached license result and re-validate against Polar API
   -h, --help      Show this help message
 
 CONFIGURATION:
@@ -207,25 +198,11 @@ CONFIGURATION:
     "framework": "chakra|shadcn|tamagui|gluestack|vanilla",
     "libraries": [
       { "name": "ui", "path": "libs/ui/src" }
-    ],
-    "licenseKey": "your-license-key"
+    ]
   }
 
-  Or set STORYBOOK_MCP_LICENSE environment variable.
-  The variable is also auto-loaded from .env or .env.local in the project root.
-
-LICENSE KEY PRIORITY (highest wins):
-  1. System / MCP client environment (e.g., Claude Desktop config "env" block)
-  2. .env.local in project root
-  3. .env in project root
-  4. licenseKey field in storybook-mcp.config.json
-
-LICENSE:
-  Free tier: ${FREE_TIER_MAX_SYNC} components, basic stories only
-  Pro ($29 launch price): Unlimited components, tests, docs, all templates
-  
-  Get Pro: ${POLAR_UPGRADE_URL}
-  Troubleshoot: run with --reset-license to force re-validation
+  Environment variables from .env / .env.local in the project root are loaded
+  automatically (.env.local wins over .env; neither overrides existing process.env).
 
 MORE INFO:
   https://npmjs.com/package/forgekit-storybook-mcp
@@ -236,7 +213,7 @@ async function main() {
   const cwd = process.cwd()
   const args = parseArgs()
 
-  // Load .env / .env.local from project root BEFORE any config or license work
+  // Load .env / .env.local from project root before config
   loadEnvFiles(cwd)
 
   if (args.help) {
@@ -255,15 +232,6 @@ async function main() {
         console.error(`  - ${f}`)
       }
     }
-    process.exit(0)
-  }
-
-  // Handle --reset-license: clear cache then exit (user can re-run normally)
-  if (args.resetLicense) {
-    resetLicenseCache()
-    console.error(
-      '[storybook-mcp] License cache cleared. Re-run without --reset-license to validate your key.'
-    )
     process.exit(0)
   }
 
@@ -421,29 +389,25 @@ Use --setup --dry-run to preview without writing files.
   // user action required.
   ensurePrestorybookScript(cwd)
 
-  // Run preflight checks
-  const preflight = await runPreflight(cwd)
-  if (!preflight.passed) {
-    console.error('\n⚠️  Preflight checks found issues:\n')
-    for (const check of preflight.checks.filter(c => c.status !== 'pass')) {
-      const icon = check.status === 'fail' ? '❌' : '⚠️'
-      console.error(`  ${icon} ${check.message}`)
-      if (check.fix) console.error(`     → ${check.fix}`)
-    }
-    if (preflight.installCommands.length > 0) {
-      console.error('\n  Fix with:\n')
-      for (const cmd of preflight.installCommands) {
-        console.error(`    ${cmd}`)
+  // Run preflight checks (optional — skipped for smoke/automation fixtures)
+  if (!args.noPreflight) {
+    const preflight = await runPreflight(cwd)
+    if (!preflight.passed) {
+      console.error('\n⚠️  Preflight checks found issues:\n')
+      for (const check of preflight.checks.filter(c => c.status !== 'pass')) {
+        const icon = check.status === 'fail' ? '❌' : '⚠️'
+        console.error(`  ${icon} ${check.message}`)
+        if (check.fix) console.error(`     → ${check.fix}`)
       }
+      if (preflight.installCommands.length > 0) {
+        console.error('\n  Fix with:\n')
+        for (const cmd of preflight.installCommands) {
+          console.error(`    ${cmd}`)
+        }
+      }
+      console.error('')
     }
-    console.error('')
   }
-
-  // Validate license (async with caching)
-  const license = await validateLicenseAsync(config)
-  console.error(
-    `[storybook-mcp] License: ${license.tier}${license.tier === 'free' ? ` (max ${license.maxSyncLimit} components)` : ''}`
-  )
 
   // Run initialization unless skipped
   if (!args.skipInit) {
@@ -454,8 +418,7 @@ Use --setup --dry-run to preview without writing files.
       generateTests: !args.noTests,
       generateDocs: !args.noDocs,
       updateExisting: !args.noUpdate,
-      dryRun: args.dryRun,
-      maxComponents: license.tier === 'free' ? license.maxSyncLimit : undefined
+      dryRun: args.dryRun
     })
 
     if (args.dryRun) {

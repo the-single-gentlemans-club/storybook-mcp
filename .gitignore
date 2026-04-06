@@ -10,8 +10,7 @@ pnpm-debug.log
 .vscode
 *.tsbuildinfo
 
-# Private scripts (license generation, etc.)
-scripts/
+# Private / local-only tooling (do not commit key material)
 pro-keys.md
 **/generate-key.*
 **/*-keys.md

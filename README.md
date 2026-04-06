@@ -2,68 +2,14 @@
 
 <div align="center">
 
-**⚡ Pro License — ~~$49~~ $29 launch price** | Unlimited sync • All templates • Test & docs generation
+**MIT · fully open source** — story generation, tests, docs, templates, sync, Figma Code Connect
 
-[**Get Pro →**](https://buy.polar.sh/polar_cl_Tnd3ryKUJpYPnXF0kBW1KFHQnoLlxAq2cz9GL3Et0dV) · [npm](https://npmjs.com/package/forgekit-storybook-mcp) · [GitHub](https://github.com/effinrich/storybook-mcp-v2)
+[npm](https://npmjs.com/package/forgekit-storybook-mcp) · [GitHub](https://github.com/effinrich/storybook-mcp)
 
 [![npm version](https://img.shields.io/npm/v/forgekit-storybook-mcp)](https://npmjs.com/package/forgekit-storybook-mcp)
-[![downloads](https://img.shields.io/npm/dm/forgekit-storybook-mcp)](https://npmjs.com/package/forgekit-storybook-mcp)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 </div>
-
----
-
-## License & Pricing
-
-**This tool follows a "Free for Basic / Paid for Pro" model.**
-
-### Free Tier
-
-Perfect for individuals and trying out the tool.
-
-- ✅ List and analyze components
-- ✅ Generate basic stories (`basic` template)
-- ✅ **Test generation** (Playwright/Vitest)
-- ✅ **Docs generation** (MDX)
-- ✅ Sync up to 10 components per run
-- ✅ `.env` / `.env.local` license key loading
-- ❌ Advanced templates (`with-msw`, `form`, `with-router`, etc.)
-- ❌ Unlimited sync (beyond 10 components)
-- ❌ `update_story` (smart merge regeneration)
-- ❌ Figma Code Connect generation
-
-### Pro Tier — ~~$49~~ $29 (Launch Price · Lifetime License)
-
-For professional teams requiring complete coverage.
-
-- ✅ **Unlimited** sync (no component cap)
-- ✅ **All** advanced templates (Interactive, MSW, Router, Form, etc.)
-- ✅ **`update_story`** — smart merge regeneration (preserves your custom exports)
-- ✅ **Figma Code Connect** generation
-- ✅ Priority support
-- ✅ Lifetime updates — no subscription
-
-**[👉 Get Pro License](https://buy.polar.sh/polar_cl_Tnd3ryKUJpYPnXF0kBW1KFHQnoLlxAq2cz9GL3Et0dV)**
-
-### Activation
-
-**Option 1: Config file**
-
-Add to `storybook-mcp.config.json`:
-
-```json
-{
-  "licenseKey": "your-polar-license-key"
-}
-```
-
-**Option 2: Environment variable**
-
-```bash
-export STORYBOOK_MCP_LICENSE=your-polar-license-key
-```
-
-License keys are UUID format, issued by Polar.sh when you purchase.
 
 ---
 
@@ -71,19 +17,17 @@ A **Model Context Protocol (MCP) server** for Storybook story generation, compon
 
 **Auto-detects** Chakra UI, shadcn/ui, Tamagui, and Gluestack UI. Works with any React project — unrecognized frameworks use vanilla defaults.
 
+### Why `forgekit` in the package name?
+
+**ForgeKit** is the broader product that scaffolds Nx monorepos (app, UI library, Storybook, and related tooling). This MCP is meant to sit alongside that workflow as the **Storybook + MCP** piece. The **`@forgekit` npm scope is not available**, so the package is published as **`forgekit-storybook-mcp`** (unscoped). The CLI also exposes the shorter command **`storybook-mcp`**. This repo is **MIT and standalone** — you do not need the rest of the ForgeKit generator to use it.
+
 ---
 
 ## 🎉 What's New in v0.12
 
-### 🔑 License detection overhaul
-- **`.env` / `.env.local` support** — `STORYBOOK_MCP_LICENSE` is now loaded automatically from the project root, no shell export required. `.env.local` takes priority over `.env`; both are overridden by a system env var or MCP client config.
-- **`--reset-license` flag** — clears the 24-hour Polar API cache and forces a fresh validation. Essential escape hatch when a key was previously rejected due to a network hiccup.
-- **Actionable error messages** — validation failures now log the exact reason (HTTP status, `status=revoked`, `expired`, network timeout) instead of a silent fallback to Free tier.
-- **Fixed `console.log` stdout corruption** — success message was writing to stdout (the MCP JSON-RPC channel), which could silently break tool responses. Moved to `console.error`.
-
-### 📦 Tests & Docs unlocked for Free tier
-- `generate_test`, `generate_docs`, and `sync_all` with tests/docs now work without a Pro license.
-- Pro retains: unlimited sync, all advanced templates, `update_story`, and Figma Code Connect.
+### 🗂 Environment & config
+- **`.env` / `.env.local` support** — environment variables are loaded automatically from the project root. `.env.local` takes priority over `.env`; neither overrides existing `process.env`.
+- **Fixed `console.log` stdout corruption** — diagnostic output uses `console.error` so the MCP JSON-RPC channel on stdout stays clean.
 
 ### 🗂 Config file auto-generation
 - **`storybook-mcp.config.json` is now created automatically** on first run if it doesn't exist — populated with auto-detected framework and library paths.
@@ -280,7 +224,6 @@ If no config is found, the MCP will auto-detect:
 | `storyFilePattern` | `string` | `'**/*.stories.{ts,tsx}'` | Glob pattern for story files |
 | `componentPatterns` | `string[]` | `['**/src/**/*.tsx', '!**/*.stories.tsx', '!**/*.test.tsx']` | Glob patterns for component files |
 | `excludePatterns` | `string[]` | `['**/node_modules/**', '**/dist/**']` | Directories to exclude |
-| `licenseKey` | `string` | - | Pro license key |
 | `templatesDir` | `string` | - | Custom templates directory |
 | `storybookVersion` | `number` | `10` | Storybook version (10+ required) |
 
@@ -412,23 +355,23 @@ Add to `claude_desktop_config.json`:
 
 ## Tools Reference
 
-| Tool | Description | Tier |
-|------|-------------|------|
-| [`list_components`](#list_components) | List all React components, filter by library or story status | Free |
-| [`analyze_component`](#analyze_component) | Extract props, dependencies, and get story suggestions | Free |
-| [`generate_story`](#generate_story) | Generate complete story files with variants and tests | Free (basic) / Pro |
-| [`update_story`](#update_story) | Regenerate a story while preserving your custom exports | Pro |
-| [`generate_test`](#generate_test) | Generate Vitest or Playwright test files | Pro |
-| [`generate_docs`](#generate_docs) | Generate MDX documentation | Pro |
-| [`generate_code_connect`](#generate_code_connect) | Generate Figma Code Connect `.figma.tsx` files | Pro |
-| [`validate_story`](#validate_story) | Check stories for best practices and issues | Free |
-| [`sync_all`](#sync_all) | Sync all components at once | Free (10 limit) / Pro |
-| [`sync_component`](#sync_component) | Sync a single component's story/test/docs | Free |
-| [`get_story_template`](#get_story_template) | Get a specific template | Free |
-| [`list_templates`](#list_templates) | List all available templates | Free |
-| [`get_component_coverage`](#get_component_coverage) | Get story coverage statistics | Free |
-| [`suggest_stories`](#suggest_stories) | Get prioritized list of components needing stories | Free |
-| [`check_health`](#check_health) | Check Storybook installation health | Free |
+| Tool | Description |
+|------|-------------|
+| [`list_components`](#list_components) | List all React components, filter by library or story status |
+| [`analyze_component`](#analyze_component) | Extract props, dependencies, and get story suggestions |
+| [`generate_story`](#generate_story) | Generate complete story files with variants and tests |
+| [`update_story`](#update_story) | Regenerate a story while preserving your custom exports |
+| [`generate_test`](#generate_test) | Generate Vitest or Playwright test files |
+| [`generate_docs`](#generate_docs) | Generate MDX documentation |
+| [`generate_code_connect`](#generate_code_connect) | Generate Figma Code Connect `.figma.tsx` files |
+| [`validate_story`](#validate_story) | Check stories for best practices and issues |
+| [`sync_all`](#sync_all) | Sync all components at once |
+| [`sync_component`](#sync_component) | Sync a single component's story/test/docs |
+| [`get_story_template`](#get_story_template) | Get a specific template |
+| [`list_templates`](#list_templates) | List all available templates |
+| [`get_component_coverage`](#get_component_coverage) | Get story coverage statistics |
+| [`suggest_stories`](#suggest_stories) | Get prioritized list of components needing stories |
+| [`check_health`](#check_health) | Check Storybook installation health |
 
 ---
 
@@ -667,7 +610,7 @@ Generate a Storybook story file for a component.
 
 ### `generate_test`
 
-Generate a test file for a component. Uses vitest + @testing-library by default. Uses Playwright only if `@playwright/test` is in your project's dependencies. **(Pro only)**
+Generate a test file for a component. Uses vitest + @testing-library by default. Uses Playwright only if `@playwright/test` is in your project's dependencies.
 
 **Parameters:**
 
@@ -716,7 +659,7 @@ Generate a test file for a component. Uses vitest + @testing-library by default.
 
 ### `generate_docs`
 
-Generate MDX documentation for a component. **(Pro only)**
+Generate MDX documentation for a component.
 
 **Parameters:**
 
@@ -817,8 +760,8 @@ Sync all components - create missing stories/tests/docs and update changed ones.
 |-----------|------|----------|---------|-------------|
 | `library` | `string` | - | all | Only sync components in this library |
 | `generateStories` | `boolean` | - | `true` | Generate story files |
-| `generateTests` | `boolean` | - | `true` | Generate test files (Pro only) |
-| `generateDocs` | `boolean` | - | `true` | Generate MDX docs (Pro only) |
+| `generateTests` | `boolean` | - | `true` | Generate test files |
+| `generateDocs` | `boolean` | - | `true` | Generate MDX docs |
 | `updateExisting` | `boolean` | - | `true` | Update files when components change |
 | `dryRun` | `boolean` | - | `false` | Preview without writing to disk |
 
@@ -893,8 +836,8 @@ Sync a single component's story, test, and docs.
 |-----------|------|----------|---------|-------------|
 | `componentPath` | `string` | ✅ | - | Path to the component file |
 | `generateStories` | `boolean` | - | `true` | Generate story file |
-| `generateTests` | `boolean` | - | `true` | Generate test file (Pro only) |
-| `generateDocs` | `boolean` | - | `true` | Generate MDX docs (Pro only) |
+| `generateTests` | `boolean` | - | `true` | Generate test file |
+| `generateDocs` | `boolean` | - | `true` | Generate MDX docs |
 | `dryRun` | `boolean` | - | `false` | Preview without writing to disk |
 
 **Examples:**
@@ -1006,19 +949,18 @@ List all available story templates.
     },
     {
       "name": "with-controls",
-      "description": "Story with full argTypes controls (Pro Only)",
+      "description": "Story with full argTypes controls",
       "useCase": "Interactive component exploration with all props exposed",
-      "available": false
+      "available": true
     },
     {
       "name": "with-variants",
-      "description": "Story showcasing all variants and sizes (Pro Only)",
+      "description": "Story showcasing all variants and sizes",
       "useCase": "Design system documentation showing all visual options",
-      "available": false
+      "available": true
     }
   ],
-  "count": 8,
-  "tier": "free"
+  "count": 8
 }
 ```
 
@@ -1161,7 +1103,7 @@ Check Storybook installation health — missing packages, outdated configs, and 
 
 ### `update_story`
 
-> **Pro feature.** Regenerate a story file using the latest component analysis while preserving any exports you have written by hand.
+Regenerate a story file using the latest component analysis while preserving any exports you have written by hand.
 
 Unlike `generate_story` with `overwrite: true` (which clobbers everything), `update_story` detects which `export const X: Story` blocks you added and appends them below the regenerated content, separated by a comment marker.
 
@@ -1209,7 +1151,7 @@ export const MyEdgeCase: Story = {
 
 ### `generate_code_connect`
 
-> **Pro feature.** Generate a `@figma/code-connect` `.figma.tsx` file that links your component to Figma Dev Mode.
+Generate a `@figma/code-connect` `.figma.tsx` file that links your component to Figma Dev Mode.
 
 When published with `npx figma connect publish`, designers inspecting your component in Figma see your real React code — props, variants, and usage examples — instead of auto-generated snippets.
 
@@ -1279,7 +1221,7 @@ See [Figma Integration](#figma-integration) for the full workflow.
 
 ## Figma Integration
 
-ForgeKit provides two complementary Figma integrations:
+This project supports two complementary Figma integrations:
 
 ### Code Connect — link components to Figma Dev Mode
 

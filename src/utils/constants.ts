@@ -4,14 +4,6 @@
  */
 
 // ===========================================
-// License & Pro Features
-// ===========================================
-export const POLAR_UPGRADE_URL = 'https://polar.sh/forgekit'
-export const FORGEKIT_EMAIL = 'forgekit@pm.me'
-export const FREE_TIER_MAX_SYNC = 10
-export const LICENSE_CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
-
-// ===========================================
 // File Extensions
 // ===========================================
 export const FILE_EXTENSIONS = {
@@ -88,7 +80,7 @@ export const CACHE = {
 } as const
 
 // ===========================================
-// ForgeKit Output Directory
+// Local data directory (story history, etc.)
 // ===========================================
 export const FORGEKIT_DIR = '.forgekit'
 export const STORY_HISTORY_FILENAME = 'story-history.json'

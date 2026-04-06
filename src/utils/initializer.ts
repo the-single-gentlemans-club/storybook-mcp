@@ -14,7 +14,7 @@ import type {
   ComponentAnalysis
 } from '../types.js'
 import { scanComponents, analyzeComponent } from './scanner.js'
-import { POLAR_UPGRADE_URL, CACHE, FILE_EXTENSIONS } from './constants.js'
+import { CACHE, FILE_EXTENSIONS } from './constants.js'
 import { generateStory, writeStoryFile } from './generator.js'
 import { generateTest, writeTestFile } from './test-generator.js'
 import { generateDocs, writeDocsFile } from './docs-generator.js'
@@ -55,7 +55,7 @@ export interface InitOptions {
   library?: string
   /** Only process components matching this pattern */
   filter?: string
-  /** Max components to process (license limit) */
+  /** Max components to process (optional cap for very large repos) */
   maxComponents?: number
 }
 
@@ -301,7 +301,6 @@ export async function initializeComponents(
   const scannedPaths = new Set(components.map(c => c.filePath))
   pruneStaleCache(config.rootDir, cache, scannedPaths)
 
-  // Apply license limit
   let limitApplied = false
   if (maxComponents && maxComponents < components.length) {
     components = components.slice(0, maxComponents)
@@ -382,9 +381,8 @@ export async function initializeComponents(
   }
   if (limitApplied && maxComponents) {
     console.error(
-      `\n⚠️  Free tier limit: Only ${maxComponents} components processed.`
+      `\n⚠️  Component cap applied: only ${maxComponents} components processed (maxComponents option).`
     )
-    console.error(`   Upgrade to Pro for unlimited: ${POLAR_UPGRADE_URL}`)
   }
 
   return result

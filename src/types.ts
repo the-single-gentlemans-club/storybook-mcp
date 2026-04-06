@@ -32,9 +32,6 @@ export interface StorybookMCPConfig {
   /** Directories to exclude */
   excludePatterns: string[]
 
-  /** License key for Pro features */
-  licenseKey?: string
-
   /** Custom templates directory (optional) */
   templatesDir?: string
 

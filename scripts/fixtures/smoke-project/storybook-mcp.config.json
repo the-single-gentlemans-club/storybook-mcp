@@ -1,0 +1,18 @@
+{
+  "framework": "vanilla",
+  "libraries": [
+    {
+      "name": "components",
+      "path": "src/components",
+      "storyTitlePrefix": "Components"
+    }
+  ],
+  "storyFilePattern": "**/*.stories.{ts,tsx}",
+  "componentPatterns": [
+    "**/*.tsx",
+    "!**/*.stories.tsx",
+    "!**/*.test.tsx"
+  ],
+  "excludePatterns": ["**/node_modules/**", "**/dist/**"],
+  "storybookVersion": 10
+}

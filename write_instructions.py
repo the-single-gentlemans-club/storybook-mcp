@@ -18,7 +18,6 @@ src/
     scanner.ts          \u2192 Component discovery (fast-glob) + prop/dependency extraction via regex
     generator.ts        \u2192 Story file generation (framework-aware: Chakra/shadcn/RN/etc.)
     initializer.ts      \u2192 Startup sync engine: MD5 hash diff via .storybook-mcp-cache.json; file watcher
-    license.ts          \u2192 Polar license validation, 24h file cache, feature gating
     setup.ts            \u2192 Storybook bootstrapper: .storybook/ config, Nx monorepo detection
     templates.ts        \u2192 8 built-in story templates (basic, with-controls, with-msw, form, etc.)
     validator.ts        \u2192 Story validator: 8 rule categories, 0-100 score
