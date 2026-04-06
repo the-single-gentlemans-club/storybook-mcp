@@ -23,30 +23,19 @@ A **Model Context Protocol (MCP) server** for Storybook story generation, compon
 
 ---
 
-## 🎉 What's New in v0.12
+## 🎉 What's New in v1.2.0
 
-### 🗂 Environment & config
-- **`.env` / `.env.local` support** — environment variables are loaded automatically from the project root. `.env.local` takes priority over `.env`; neither overrides existing `process.env`.
-- **Fixed `console.log` stdout corruption** — diagnostic output uses `console.error` so the MCP JSON-RPC channel on stdout stays clean.
+### MIT · fully open source
+- **No license keys or paid tiers** — Polar validation, sync caps, and feature gating are removed. All tools (`sync_all`, `update_story`, `generate_code_connect`, templates, etc.) are available under the [MIT License](./LICENSE).
 
-### 🗂 Config file auto-generation
-- **`storybook-mcp.config.json` is now created automatically** on first run if it doesn't exist — populated with auto-detected framework and library paths.
-- `--setup` always writes/refreshes the config file after bootstrapping `.storybook/`.
-- Existing `package.json#storybook-mcp` configs are **migrated** to the standalone file automatically.
+### CI & quality
+- **GitHub Actions** runs `npm run verify` (typecheck, build, tests, MCP stdio smoke) on every push and PR.
+- **`npm run smoke` / `npm run verify`** — local gate before releases; smoke uses a tiny fixture and real MCP `listTools` / `callTool` over stdio.
+- **`--no-preflight`** — skip Storybook/npm dependency checks (for automation and the smoke test). Normal runs still show install hints when deps are missing.
 
-### 👁 Background file watching
-- **Live sync** — the server now watches all configured library directories with `fs.watch({ recursive })` and re-syncs any changed component within 500 ms (debounced).
-- **Periodic catch-up rescan** every 30 seconds covers events missed by `fs.watch` (Linux kernel limitations, network drives, bulk renames).
-- New `--no-watch` flag to disable watching (useful in CI or `--init-only` pipelines).
-- Clean shutdown on `SIGINT` / `SIGTERM` — watchers and timers are always closed.
+**Earlier releases** (background watch, `.env` loading, config auto-generation, concurrent sync, and more) are summarized in [CHANGELOG](./CHANGELOG.md).
 
-### ⚡ Performance & reliability
-- **Concurrent sync** — components are processed in parallel batches of 5, making large repos significantly faster on startup.
-- **Atomic cache writes** — cache file is written to `.tmp` then renamed, preventing corruption on crash or kill signal.
-- **Stale cache pruning** — deleted components are removed from the hash cache automatically.
-- **`syncSingleComponent` deep copy fix** — shallow `{ ...cache }` was sharing inner object references, allowing mutations to corrupt the old cache state.
-
-**Upgrading from 0.11.x?** Run `npm install forgekit-storybook-mcp@latest`. No breaking changes. See [CHANGELOG](./CHANGELOG.md) for full details.
+**Upgrading?** Run `npm install forgekit-storybook-mcp@latest`. See [CHANGELOG](./CHANGELOG.md) for migration notes by version.
 
 ---
 
