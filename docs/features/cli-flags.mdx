@@ -15,14 +15,6 @@ Available for all commands:
   ```
 </ParamField>
 
-<ParamField path="--license" type="string">
-  Pro license key (or use STORYBOOK_MCP_LICENSE env var)
-
-  ```bash
-  npx storybook-mcp --license your-key-here
-  ```
-</ParamField>
-
 <ParamField path="--verbose" type="boolean">
   Enable debug logging
 
@@ -108,7 +100,7 @@ npx storybook-mcp sync-all [options]
 </ParamField>
 
 <ParamField path="--tests" type="boolean" default="false">
-  Generate test files (Pro only)
+  Generate test files
 
   ```bash
   npx storybook-mcp sync-all --tests
@@ -116,7 +108,7 @@ npx storybook-mcp sync-all [options]
 </ParamField>
 
 <ParamField path="--docs" type="boolean" default="false">
-  Generate MDX documentation (Pro only)
+  Generate MDX documentation
 
   ```bash
   npx storybook-mcp sync-all --docs
@@ -292,10 +284,7 @@ npx storybook-mcp suggest [options]
 Override options with environment variables:
 
 ```bash
-# License key
-export STORYBOOK_MCP_LICENSE=your-license-key
-
-# Framework
+# Framework (optional)
 export STORYBOOK_MCP_FRAMEWORK=chakra
 
 # Config path
@@ -340,9 +329,9 @@ export STORYBOOK_MCP_VERBOSE=true
     ```
   </Accordion>
 
-  <Accordion icon="star" title="Pro features">
+  <Accordion icon="star" title="Full generation">
     ```bash
-    # Generate everything (Pro license)
+    # Generate stories, tests, and docs
     npx storybook-mcp sync-all --stories --tests --docs
     ```
   </Accordion>

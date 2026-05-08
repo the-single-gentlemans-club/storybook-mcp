@@ -58,29 +58,6 @@ Add Storybook MCP to Claude Desktop's MCP configuration:
   </Step>
 </Steps>
 
-## Pro License
-
-Add your Pro license key:
-
-```json
-{
-  "mcpServers": {
-    "storybook-mcp": {
-      "command": "npx",
-      "args": ["-y", "storybook-mcp"],
-      "cwd": "/absolute/path/to/your/project",
-      "env": {
-        "STORYBOOK_MCP_LICENSE": "your-license-key-here"
-      }
-    }
-  }
-}
-```
-
-<Tip>
-  Alternatively, create a `.env` file in your project with `STORYBOOK_MCP_LICENSE=your-key`
-</Tip>
-
 ## Multi-Project Setup
 
 Manage multiple projects with separate MCP instances:
@@ -315,18 +292,6 @@ Logs appear in:
     ```
   </Accordion>
 
-  <Accordion icon="circle-exclamation" title="License not recognized">
-    Ensure license is in `env` or `.env` file:
-
-    ```json
-    "env": {
-      "STORYBOOK_MCP_LICENSE": "polar_xxxxxxxxxxxxx"
-    }
-    ```
-
-    Verify at [polar.sh/yourusername](https://polar.sh) that license is active.
-  </Accordion>
-
   <Accordion icon="circle-exclamation" title="npx command fails">
     Use global install instead:
 
@@ -363,7 +328,7 @@ For faster startup:
 
 Storybook MCP:
 - Only reads/writes files in your project directory
-- Never accesses network (except license validation)
+- Does not call external license or analytics APIs
 - Open source - audit at [github.com/yourusername/storybook-mcp](https://github.com)
 
 ## Next Steps

@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "name": "ForgeKit Storybook MCP",
+  "name": "Storybook MCP",
   "theme": "mint",
   "logo": {
     "dark": "/logo/dark.svg",
@@ -15,14 +15,14 @@
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:forgekit@pm.me"
+        "label": "GitHub",
+        "href": "https://github.com/effinrich/storybook-mcp"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Get Pro License",
-      "href": "https://buy.polar.sh/polar_cl_Tnd3ryKUJpYPnXF0kBW1KFHQnoLlxAq2cz9GL3Et0dV"
+      "label": "npm",
+      "href": "https://npmjs.com/package/forgekit-storybook-mcp"
     }
   },
   "navigation": {
@@ -35,7 +35,7 @@
       {
         "anchor": "GitHub",
         "icon": "github",
-        "href": "https://github.com/the-single-gentlemans-club/storybook-mcp"
+        "href": "https://github.com/effinrich/storybook-mcp"
       }
     ],
     "tabs": [
@@ -65,7 +65,7 @@
           },
           {
             "group": "License",
-            "pages": ["license/pricing", "license/activation"]
+            "pages": ["license"]
           },
           {
             "group": "Reference",
@@ -118,8 +118,7 @@
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/the-single-gentlemans-club/storybook-mcp",
-      "x": "https://x.com/forgekitdev"
+      "github": "https://github.com/effinrich/storybook-mcp"
     }
   }
 }

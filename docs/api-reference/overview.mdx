@@ -35,7 +35,7 @@ Storybook MCP provides 13 powerful tools for managing your Storybook workflow:
     href="/api-reference/generate-test"
     color="#FF4785"
   >
-    Generate Playwright/Vitest tests (Pro)
+    Generate Playwright/Vitest tests
   </Card>
   <Card
     title="generate_docs"
@@ -43,7 +43,7 @@ Storybook MCP provides 13 powerful tools for managing your Storybook workflow:
     href="/api-reference/generate-docs"
     color="#FF4785"
   >
-    Generate MDX documentation (Pro)
+    Generate MDX documentation
   </Card>
   <Card
     title="validate_story"
@@ -103,8 +103,8 @@ Storybook MCP provides 13 powerful tools for managing your Storybook workflow:
   <Tab title="Generation">
     Tools for creating stories, tests, and docs:
     - `generate_story` - Story files
-    - `generate_test` - Test files (Pro)
-    - `generate_docs` - MDX documentation (Pro)
+    - `generate_test` - Test files
+    - `generate_docs` - MDX documentation
     - `sync_all` - Batch generation
     - `sync_component` - Single component sync
   </Tab>
@@ -116,35 +116,9 @@ Storybook MCP provides 13 powerful tools for managing your Storybook workflow:
   </Tab>
 </Tabs>
 
-## License Tiers
+## License
 
-<Info>
-  Some tools require a Pro license. See [Pricing](/license/pricing) for details.
-</Info>
-
-<ResponseField name="Free Tier" type="Features">
-  <Expandable title="Available Tools">
-    - ✅ list_components
-    - ✅ analyze_component
-    - ✅ generate_story (basic template only)
-    - ✅ validate_story
-    - ✅ get_component_coverage
-    - ✅ suggest_stories
-    - ✅ check_health
-    - ⚠️ sync_all (max 5 components)
-  </Expandable>
-</ResponseField>
-
-<ResponseField name="Pro Tier - $49" type="Features">
-  <Expandable title="All Tools + Advanced Features">
-    - ✅ All free tier tools
-    - ✅ generate_test (Playwright/Vitest)
-    - ✅ generate_docs (MDX)
-    - ✅ All story templates
-    - ✅ Unlimited sync
-    - ✅ Priority support
-  </Expandable>
-</ResponseField>
+This package is [MIT licensed](https://opensource.org/licenses/MIT). All tools are available without a license key.
 
 ## Common Patterns
 
@@ -195,7 +169,7 @@ Tools use structured error codes for programmatic handling:
 | Code | Category | Description |
 |------|----------|-------------|
 | 1000-1099 | File System | Component not found, file read/write errors |
-| 2000-2099 | License | Feature requires Pro, license validation failed |
+| 2000-2099 | Reserved | (legacy codes; unused) |
 | 3000-3099 | Configuration | Invalid config, missing library |
 | 4000-4099 | Analysis | Parse error, invalid component |
 | 5000-5099 | Generation | Template not found, generation failed |

@@ -38,7 +38,7 @@ afterAll(() => {
   fs.rmSync(tmpDir, { recursive: true, force: true })
 })
 
-function makeConfig(licenseKey?: string): StorybookMCPConfig {
+function makeConfig(): StorybookMCPConfig {
   return {
     rootDir: tmpDir,
     libraries: [
@@ -47,13 +47,12 @@ function makeConfig(licenseKey?: string): StorybookMCPConfig {
     framework: 'vanilla',
     storyFilePattern: '**/*.stories.{ts,tsx}',
     componentPatterns: ['**/*.tsx', '!**/*.stories.tsx', '!**/*.test.tsx'],
-    excludePatterns: ['**/node_modules/**'],
-    licenseKey
+    excludePatterns: ['**/node_modules/**']
   }
 }
 
-describe('tools - feature gating', () => {
-  it('generate_test works on free tier', async () => {
+describe('tools - generation', () => {
+  it('generate_test works', async () => {
     const result = await generateTestTool(makeConfig(), {
       componentPath: 'src/components/Widget.tsx',
       dryRun: true
@@ -62,7 +61,7 @@ describe('tools - feature gating', () => {
     expect(result.written).toBe(false) // dry run
   })
 
-  it('generate_docs works on free tier', async () => {
+  it('generate_docs works', async () => {
     const result = await generateDocsTool(makeConfig(), {
       componentPath: 'src/components/Widget.tsx',
       dryRun: true
@@ -71,7 +70,7 @@ describe('tools - feature gating', () => {
     expect(result.written).toBe(false) // dry run
   })
 
-  it('generate_story works in free tier (basic template)', async () => {
+  it('generate_story works (basic template)', async () => {
     const result = await generateStoryTool(makeConfig(), {
       componentPath: 'src/components/Widget.tsx',
       dryRun: true
@@ -80,19 +79,19 @@ describe('tools - feature gating', () => {
     expect(result.written).toBe(false) // dry run
   })
 
-  it('generate_story with advanced template requires Pro', async () => {
-    await expect(
-      generateStoryTool(makeConfig(), {
-        componentPath: 'src/components/Widget.tsx',
-        template: 'with-msw',
-        dryRun: true
-      })
-    ).rejects.toThrow(/Pro license/)
+  it('generate_story with advanced template succeeds', async () => {
+    const result = await generateStoryTool(makeConfig(), {
+      componentPath: 'src/components/Widget.tsx',
+      template: 'with-msw',
+      dryRun: true
+    })
+    expect(result.story.content.length).toBeGreaterThan(0)
+    expect(result.written).toBe(false)
   })
 })
 
 describe('tools - syncAll', () => {
-  it('respects free tier maxComponents limit', async () => {
+  it('processes multiple components', async () => {
     // Create multiple components
     const compDir = path.join(tmpDir, 'src', 'components')
     for (let i = 1; i <= 8; i++) {
@@ -112,17 +111,15 @@ export const Comp${i} = () => <div>Comp${i}</div>
       dryRun: true
     })
 
-    // Free tier allows tests and docs up to component limit
     expect(result).toBeDefined()
   })
 
-  it('allows test and docs generation on free tier', async () => {
+  it('allows test and docs generation', async () => {
     const result = await syncAll(makeConfig(), {
       generateTests: true,
       generateDocs: true,
       dryRun: true
     })
-    // Free tier: tests and docs ARE enabled (up to component limit)
     expect(result).toBeDefined()
   })
 })

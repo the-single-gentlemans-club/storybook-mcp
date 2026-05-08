@@ -45,7 +45,7 @@ export function createStorybookMCPServer(config: StorybookMCPConfig) {
   const server = new Server(
     {
       name: 'storybook-mcp',
-      version: '0.1.0',
+      version: '1.1.5',
     },
     {
       capabilities: {
@@ -137,7 +137,7 @@ export function createStorybookMCPServer(config: StorybookMCPConfig) {
       },
       {
         name: 'update_story',
-        description: 'Update an existing Storybook story — regenerates template sections while preserving user-added stories. Pro tier only.',
+        description: 'Update an existing Storybook story — regenerates template sections while preserving user-added stories.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -360,7 +360,7 @@ export function createStorybookMCPServer(config: StorybookMCPConfig) {
         name: 'generate_code_connect',
         description:
           'Generate a @figma/code-connect .figma.tsx file that links a React component to Figma dev mode. ' +
-          'Designers will see your real component code in Figma Dev Mode. Pro tier only.',
+          'Designers will see your real component code in Figma Dev Mode.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -560,15 +560,8 @@ export function createStorybookMCPServer(config: StorybookMCPConfig) {
 
 /**
  * Run the MCP server with stdio transport
- * Ensures license validation is performed before starting
  */
 export async function runServer(config: StorybookMCPConfig) {
-  // Import here to avoid circular dependency
-  const { validateLicenseAsync } = await import('./utils/license.js')
-
-  // Validate license and cache result for all tool calls
-  await validateLicenseAsync(config)
-
   const server = createStorybookMCPServer(config)
   const transport = new StdioServerTransport()
   await server.connect(transport)

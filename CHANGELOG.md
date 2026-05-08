@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-04-04
+
+### Added
+
+- **GitHub Actions CI** — runs `npm run verify` (typecheck, build, tests, MCP stdio smoke) on push and pull requests.
+- **Release-quality checks** — `npm run smoke` (stdio MCP against a tiny fixture) and `npm run verify` (full gate before publishing).
+- **`--no-preflight` CLI flag** — skip Storybook/npm dependency checks; intended for automation and the built-in smoke test (normal runs still show install hints when deps are missing).
+
+### Changed
+
+- **Fully open source (MIT)** — removed Polar.sh license validation, paid tiers, sync caps, and feature gating. All templates, `update_story`, `generate_code_connect`, and unlimited `sync_all` are available to everyone. See README for the single MIT license section.
+
+### Removed
+
+- `src/utils/license.ts`, `STORYBOOK_MCP_LICENSE`, `licenseKey` config field, `--reset-license` CLI flag, and `~/.forgekit/license-cache.json`.
+
 ## [1.1.5] - 2026-02-23
 
 ### Added

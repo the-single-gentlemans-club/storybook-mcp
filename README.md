@@ -213,7 +213,6 @@ If no config is found, the MCP will auto-detect:
 | `storyFilePattern` | `string` | `'**/*.stories.{ts,tsx}'` | Glob pattern for story files |
 | `componentPatterns` | `string[]` | `['**/src/**/*.tsx', '!**/*.stories.tsx', '!**/*.test.tsx']` | Glob patterns for component files |
 | `excludePatterns` | `string[]` | `['**/node_modules/**', '**/dist/**']` | Directories to exclude |
-| `licenseKey` | `string` | - | Pro license key |
 | `templatesDir` | `string` | - | Custom templates directory |
 | `storybookVersion` | `number` | `10` | Storybook version (10+ required) |
 
@@ -345,23 +344,23 @@ Add to `claude_desktop_config.json`:
 
 ## Tools Reference
 
-| Tool | Description | Tier |
-|------|-------------|------|
-| [`list_components`](#list_components) | List all React components, filter by library or story status | Free |
-| [`analyze_component`](#analyze_component) | Extract props, dependencies, and get story suggestions | Free |
-| [`generate_story`](#generate_story) | Generate complete story files with variants and tests | Free (basic) / Pro |
-| [`update_story`](#update_story) | Regenerate a story while preserving your custom exports | Pro |
-| [`generate_test`](#generate_test) | Generate Vitest or Playwright test files | Pro |
-| [`generate_docs`](#generate_docs) | Generate MDX documentation | Pro |
-| [`generate_code_connect`](#generate_code_connect) | Generate Figma Code Connect `.figma.tsx` files | Pro |
-| [`validate_story`](#validate_story) | Check stories for best practices and issues | Free |
-| [`sync_all`](#sync_all) | Sync all components at once | Free (10 limit) / Pro |
-| [`sync_component`](#sync_component) | Sync a single component's story/test/docs | Free |
-| [`get_story_template`](#get_story_template) | Get a specific template | Free |
-| [`list_templates`](#list_templates) | List all available templates | Free |
-| [`get_component_coverage`](#get_component_coverage) | Get story coverage statistics | Free |
-| [`suggest_stories`](#suggest_stories) | Get prioritized list of components needing stories | Free |
-| [`check_health`](#check_health) | Check Storybook installation health | Free |
+| Tool | Description |
+|------|-------------|
+| [`list_components`](#list_components) | List all React components, filter by library or story status |
+| [`analyze_component`](#analyze_component) | Extract props, dependencies, and get story suggestions |
+| [`generate_story`](#generate_story) | Generate complete story files with variants and tests |
+| [`update_story`](#update_story) | Regenerate a story while preserving your custom exports |
+| [`generate_test`](#generate_test) | Generate Vitest or Playwright test files |
+| [`generate_docs`](#generate_docs) | Generate MDX documentation |
+| [`generate_code_connect`](#generate_code_connect) | Generate Figma Code Connect `.figma.tsx` files |
+| [`validate_story`](#validate_story) | Check stories for best practices and issues |
+| [`sync_all`](#sync_all) | Sync all components at once |
+| [`sync_component`](#sync_component) | Sync a single component's story/test/docs |
+| [`get_story_template`](#get_story_template) | Get a specific template |
+| [`list_templates`](#list_templates) | List all available templates |
+| [`get_component_coverage`](#get_component_coverage) | Get story coverage statistics |
+| [`suggest_stories`](#suggest_stories) | Get prioritized list of components needing stories |
+| [`check_health`](#check_health) | Check Storybook installation health |
 
 ---
 
@@ -600,7 +599,7 @@ Generate a Storybook story file for a component.
 
 ### `generate_test`
 
-Generate a test file for a component. Uses vitest + @testing-library by default. Uses Playwright only if `@playwright/test` is in your project's dependencies. **(Pro only)**
+Generate a test file for a component. Uses vitest + @testing-library by default. Uses Playwright only if `@playwright/test` is in your project's dependencies.
 
 **Parameters:**
 
@@ -649,7 +648,7 @@ Generate a test file for a component. Uses vitest + @testing-library by default.
 
 ### `generate_docs`
 
-Generate MDX documentation for a component. **(Pro only)**
+Generate MDX documentation for a component.
 
 **Parameters:**
 
@@ -750,8 +749,8 @@ Sync all components - create missing stories/tests/docs and update changed ones.
 |-----------|------|----------|---------|-------------|
 | `library` | `string` | - | all | Only sync components in this library |
 | `generateStories` | `boolean` | - | `true` | Generate story files |
-| `generateTests` | `boolean` | - | `true` | Generate test files (Pro only) |
-| `generateDocs` | `boolean` | - | `true` | Generate MDX docs (Pro only) |
+| `generateTests` | `boolean` | - | `true` | Generate test files |
+| `generateDocs` | `boolean` | - | `true` | Generate MDX docs |
 | `updateExisting` | `boolean` | - | `true` | Update files when components change |
 | `dryRun` | `boolean` | - | `false` | Preview without writing to disk |
 
@@ -826,8 +825,8 @@ Sync a single component's story, test, and docs.
 |-----------|------|----------|---------|-------------|
 | `componentPath` | `string` | ✅ | - | Path to the component file |
 | `generateStories` | `boolean` | - | `true` | Generate story file |
-| `generateTests` | `boolean` | - | `true` | Generate test file (Pro only) |
-| `generateDocs` | `boolean` | - | `true` | Generate MDX docs (Pro only) |
+| `generateTests` | `boolean` | - | `true` | Generate test file |
+| `generateDocs` | `boolean` | - | `true` | Generate MDX docs |
 | `dryRun` | `boolean` | - | `false` | Preview without writing to disk |
 
 **Examples:**
@@ -939,19 +938,18 @@ List all available story templates.
     },
     {
       "name": "with-controls",
-      "description": "Story with full argTypes controls (Pro Only)",
+      "description": "Story with full argTypes controls",
       "useCase": "Interactive component exploration with all props exposed",
-      "available": false
+      "available": true
     },
     {
       "name": "with-variants",
-      "description": "Story showcasing all variants and sizes (Pro Only)",
+      "description": "Story showcasing all variants and sizes",
       "useCase": "Design system documentation showing all visual options",
-      "available": false
+      "available": true
     }
   ],
-  "count": 8,
-  "tier": "free"
+  "count": 8
 }
 ```
 
@@ -1094,7 +1092,7 @@ Check Storybook installation health — missing packages, outdated configs, and 
 
 ### `update_story`
 
-> **Pro feature.** Regenerate a story file using the latest component analysis while preserving any exports you have written by hand.
+Regenerate a story file using the latest component analysis while preserving any exports you have written by hand.
 
 Unlike `generate_story` with `overwrite: true` (which clobbers everything), `update_story` detects which `export const X: Story` blocks you added and appends them below the regenerated content, separated by a comment marker.
 
@@ -1142,7 +1140,7 @@ export const MyEdgeCase: Story = {
 
 ### `generate_code_connect`
 
-> **Pro feature.** Generate a `@figma/code-connect` `.figma.tsx` file that links your component to Figma Dev Mode.
+Generate a `@figma/code-connect` `.figma.tsx` file that links your component to Figma Dev Mode.
 
 When published with `npx figma connect publish`, designers inspecting your component in Figma see your real React code — props, variants, and usage examples — instead of auto-generated snippets.
 
@@ -1212,7 +1210,7 @@ See [Figma Integration](#figma-integration) for the full workflow.
 
 ## Figma Integration
 
-ForgeKit provides two complementary Figma integrations:
+This project supports two complementary Figma integrations:
 
 ### Code Connect — link components to Figma Dev Mode
 

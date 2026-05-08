@@ -1,5 +1,4 @@
 {
-  "$schema": "./node_modules/@forgekit/storybook-mcp/config-schema.json",
   "framework": "chakra",
   "libraries": [
     {

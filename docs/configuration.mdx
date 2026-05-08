@@ -25,8 +25,7 @@ Create `storybook-mcp.config.json` in your project root:
       "storyTitlePrefix": "UI",
       "importAlias": "@ui"
     }
-  ],
-  "licenseKey": "your-polar-license-key"
+  ]
 }
 ```
 
@@ -74,10 +73,6 @@ Create `storybook-mcp.config.json` in your project root:
 
 <ParamField path="excludePatterns" type="string[]" default='["**/node_modules/**", "**/dist/**"]'>
   Directories to exclude from scanning
-</ParamField>
-
-<ParamField path="licenseKey" type="string">
-  Pro license key from Polar.sh
 </ParamField>
 
 <ParamField path="templatesDir" type="string">
@@ -179,10 +174,7 @@ If no config is found, Storybook MCP will:
 Override configuration with environment variables:
 
 ```bash
-# License key
-export STORYBOOK_MCP_LICENSE=your-license-key
-
-# Framework override
+# Framework override (optional)
 export STORYBOOK_MCP_FRAMEWORK=chakra
 ```
 

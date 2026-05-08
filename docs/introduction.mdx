@@ -18,6 +18,12 @@ description: 'A Model Context Protocol (MCP) server for Storybook story generati
 
 Storybook MCP is a **Model Context Protocol server** that automates Storybook story generation, component analysis, and validation. It integrates with Claude, Cursor, and other MCP-compatible AI assistants to supercharge your Storybook workflow.
 
+It **auto-detects** Chakra UI, shadcn/ui, Tamagui, and Gluestack UI. It works with any React project — unrecognized frameworks use vanilla defaults.
+
+## Why `forgekit` in the package name?
+
+**ForgeKit** is the broader product that scaffolds Nx monorepos (app, UI library, Storybook, and related tooling). This MCP is meant to sit alongside that workflow as the **Storybook + MCP** piece. The **`@forgekit` npm scope is not available**, so the package is published as **`forgekit-storybook-mcp`** (unscoped). The CLI also exposes the shorter command **`storybook-mcp`**. This repo is **MIT and standalone** — you do not need the rest of the ForgeKit generator to use it.
+
 <CardGroup cols={2}>
   <Card
     title="Auto-Generate Stories"
@@ -38,7 +44,7 @@ Storybook MCP is a **Model Context Protocol server** that automates Storybook st
     icon="flask"
     href="/api-reference/generate-test"
   >
-    Generate Playwright and Vitest tests from your components (Pro feature)
+    Generate Playwright and Vitest tests from your components
   </Card>
   <Card
     title="Smart Analysis"
@@ -116,36 +122,9 @@ Storybook MCP is a **Model Context Protocol server** that automates Storybook st
   </Card>
 </CardGroup>
 
-## Free vs Pro
+## Open source
 
-<Tabs>
-  <Tab title="Free Tier">
-    Perfect for individuals and trying out the tool.
-
-    <Check>List and analyze components</Check>
-    <Check>Generate basic stories</Check>
-    <Check>Sync up to 10 components per run</Check>
-    <Close>Advanced templates</Close>
-    <Close>Test generation</Close>
-    <Close>Docs generation</Close>
-    <Close>Figma Code Connect generation</Close>
-  </Tab>
-
-  <Tab title="Pro Tier - $29 Launch Price">
-    For professional teams requiring complete coverage.
-
-    <Check>**Unlimited** component sync</Check>
-    <Check>**All** templates (Interactive, MSW, Router, etc.)</Check>
-    <Check>**Test generation** (Playwright/Vitest)</Check>
-    <Check>**Docs generation** (MDX)</Check>
-    <Check>**Figma Code Connect** generation</Check>
-    <Check>**Smart story updates** (preserves custom exports)</Check>
-    <Check>Priority support</Check>
-    <Check>Lifetime updates — no subscription</Check>
-
-    [Get Pro License →](https://buy.polar.sh/polar_cl_Tnd3ryKUJpYPnXF0kBW1KFHQnoLlxAq2cz9GL3Et0dV)
-  </Tab>
-</Tabs>
+This project is **MIT licensed** and **fully free**: all templates, test and docs generation, `sync_all`, `update_story`, and Figma Code Connect are available without a license key. See the [License](/license) page.
 
 ## Next Steps
 

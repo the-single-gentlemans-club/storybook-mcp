@@ -137,8 +137,6 @@ npm publish --otp=CODE --access public
 - `src/utils/templates.ts` - Story templates
 - `src/utils/test-generator.ts` - Test generation
 - `src/utils/docs-generator.ts` - Docs generation
-- `src/utils/license.ts` - License validation
-
 ## Common Issues
 
 ### Tests Failing
@@ -155,7 +153,5 @@ npm publish --otp=CODE --access public
 - Check both base and -dom packages for routers
 - Use importsFrom() helper in scanner.ts
 
-## License Model
-- **Free**: 5 components, basic template only
-- **Pro**: $49 lifetime, unlimited, all features
-- **Validation**: Polar.sh API (24h cache)
+## License
+MIT — fully open source; no license keys or paid tiers.

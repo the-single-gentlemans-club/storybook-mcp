@@ -15,12 +15,6 @@ export enum ErrorCode {
   FILE_WRITE_ERROR = 'FILE_WRITE_ERROR',
   INVALID_PATH = 'INVALID_PATH',
 
-  // License & Feature Errors (2000-2099)
-  LICENSE_REQUIRED = 'LICENSE_REQUIRED',
-  FEATURE_NOT_AVAILABLE = 'FEATURE_NOT_AVAILABLE',
-  LICENSE_VALIDATION_FAILED = 'LICENSE_VALIDATION_FAILED',
-  SYNC_LIMIT_EXCEEDED = 'SYNC_LIMIT_EXCEEDED',
-
   // Configuration Errors (3000-3099)
   INVALID_CONFIG = 'INVALID_CONFIG',
   MISSING_CONFIG = 'MISSING_CONFIG',
@@ -93,12 +87,6 @@ export class StorybookMCPError extends Error {
 export class FileSystemError extends StorybookMCPError {
   constructor(message: string, code: ErrorCode, path?: string) {
     super(message, code, { path })
-  }
-}
-
-export class LicenseError extends StorybookMCPError {
-  constructor(message: string, feature?: string) {
-    super(message, ErrorCode.FEATURE_NOT_AVAILABLE, { feature })
   }
 }
 
