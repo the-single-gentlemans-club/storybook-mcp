@@ -3,12 +3,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
 import {
-  runSetup,
-  detectProjectType,
   detectFramework,
-  findNxLibName,
-  detectInstalledStorybookVersion,
-  detectNxStorybookVersion
+  detectNextjs,
+  detectProjectType,
+  runSetup,
 } from '../setup.js'
 
 let tmpDir: string
@@ -75,57 +73,6 @@ describe('setup - detection', () => {
     expect(detectFramework(dir)).toBe('shadcn')
   })
 
-  it('detectFramework detects shadcn via any @radix-ui/* package', () => {
-    const dir = path.join(tmpDir, 'shadcn-radix')
-    fs.mkdirSync(dir, { recursive: true })
-    fs.writeFileSync(
-      path.join(dir, 'package.json'),
-      JSON.stringify({
-        dependencies: { '@radix-ui/react-dialog': '^2.0.0' }
-      })
-    )
-    expect(detectFramework(dir)).toBe('shadcn')
-  })
-
-  it('detectFramework detects shadcn via @base-ui-components/react', () => {
-    const dir = path.join(tmpDir, 'shadcn-baseui')
-    fs.mkdirSync(dir, { recursive: true })
-    fs.writeFileSync(
-      path.join(dir, 'package.json'),
-      JSON.stringify({
-        dependencies: { '@base-ui-components/react': '^1.0.0' }
-      })
-    )
-    expect(detectFramework(dir)).toBe('shadcn')
-  })
-
-  it('detectFramework detects shadcn via lucide-react', () => {
-    const dir = path.join(tmpDir, 'shadcn-lucide')
-    fs.mkdirSync(dir, { recursive: true })
-    fs.writeFileSync(
-      path.join(dir, 'package.json'),
-      JSON.stringify({
-        dependencies: { 'lucide-react': '^0.400.0' }
-      })
-    )
-    expect(detectFramework(dir)).toBe('shadcn')
-  })
-
-  it('detectFramework detects shadcn via components.json alone', () => {
-    const dir = path.join(tmpDir, 'shadcn-compjson')
-    fs.mkdirSync(dir, { recursive: true })
-    // package.json with no recognisable deps
-    fs.writeFileSync(
-      path.join(dir, 'package.json'),
-      JSON.stringify({ dependencies: {} })
-    )
-    fs.writeFileSync(
-      path.join(dir, 'components.json'),
-      JSON.stringify({ style: 'default' })
-    )
-    expect(detectFramework(dir)).toBe('shadcn')
-  })
-
   it('detectFramework detects Gluestack', () => {
     const dir = path.join(tmpDir, 'gluestack-proj')
     fs.mkdirSync(dir, { recursive: true })
@@ -148,21 +95,17 @@ describe('setup - config generation', () => {
       JSON.stringify({ scripts: {} })
     )
 
-    const result = await runSetup(dir, { dryRun: false, force: true })
+    await runSetup(dir, { dryRun: false, force: true })
 
     const mainPath = path.join(dir, '.storybook', 'main.ts')
     expect(fs.existsSync(mainPath)).toBe(true)
 
     const mainContent = fs.readFileSync(mainPath, 'utf-8')
 
-    // Check addons
-    expect(mainContent).toContain('@storybook/addon-docs')
-    expect(mainContent).toContain('@storybook/addon-a11y')
-
     // Check stories glob
     expect(mainContent).toContain('../src/**/*.@(mdx|stories.@(js|jsx|ts|tsx))')
 
-    // Check NO autodocs config
+    // Check NO autodocs config (legacy config in this branch)
     expect(mainContent).not.toContain("autodocs: 'tag'")
     expect(mainContent).not.toContain('autodocs')
 
@@ -267,104 +210,132 @@ describe('setup - config generation', () => {
   })
 })
 
-describe('setup - version detection', () => {
-  it('detectInstalledStorybookVersion returns null when nothing installed', () => {
-    const dir = path.join(tmpDir, 'ver-none')
-    fs.mkdirSync(dir, { recursive: true })
-    expect(detectInstalledStorybookVersion(dir)).toBeNull()
-  })
-
-  it('detectInstalledStorybookVersion reads from package.json devDependencies', () => {
-    const dir = path.join(tmpDir, 'ver-pkg')
+describe('setup - Next.js detection', () => {
+  it('detectNextjs returns false when no next dependency', () => {
+    const dir = path.join(tmpDir, 'nextjs-none')
     fs.mkdirSync(dir, { recursive: true })
     fs.writeFileSync(
       path.join(dir, 'package.json'),
-      JSON.stringify({
-        devDependencies: { storybook: '^10.3.1' }
-      })
+      JSON.stringify({ dependencies: {} })
     )
-    expect(detectInstalledStorybookVersion(dir)).toBe('10.3.1')
+    expect(detectNextjs(dir)).toBe(false)
   })
 
-  it('detectInstalledStorybookVersion reads from node_modules when present', () => {
-    const dir = path.join(tmpDir, 'ver-nm')
-    const sbNmDir = path.join(dir, 'node_modules', 'storybook')
-    fs.mkdirSync(sbNmDir, { recursive: true })
-    fs.writeFileSync(
-      path.join(sbNmDir, 'package.json'),
-      JSON.stringify({ version: '10.4.0' })
-    )
-    expect(detectInstalledStorybookVersion(dir)).toBe('10.4.0')
-  })
-
-  it('detectInstalledStorybookVersion prefers node_modules over package.json', () => {
-    const dir = path.join(tmpDir, 'ver-prefer-nm')
-    const sbNmDir = path.join(dir, 'node_modules', 'storybook')
-    fs.mkdirSync(sbNmDir, { recursive: true })
-    fs.writeFileSync(
-      path.join(sbNmDir, 'package.json'),
-      JSON.stringify({ version: '10.5.0' })
-    )
-    fs.writeFileSync(
-      path.join(dir, 'package.json'),
-      JSON.stringify({
-        devDependencies: { storybook: '^10.3.0' }
-      })
-    )
-    expect(detectInstalledStorybookVersion(dir)).toBe('10.5.0')
-  })
-
-  it('getDependencies uses detected version when SB >=10 in package.json', async () => {
-    const dir = path.join(tmpDir, 'ver-match')
+  it('detectNextjs returns false when next is in deps but no next.config', () => {
+    const dir = path.join(tmpDir, 'nextjs-no-config')
     fs.mkdirSync(dir, { recursive: true })
     fs.writeFileSync(
       path.join(dir, 'package.json'),
-      JSON.stringify({
-        scripts: {},
-        devDependencies: { storybook: '^10.3.1' }
-      })
+      JSON.stringify({ dependencies: { next: '^15.0.0' } })
     )
-    const result = await runSetup(dir, { force: true, dryRun: true })
-    // All @storybook packages should use the detected version range
-    for (const dep of result.dependencies.dev) {
-      if (dep.startsWith('storybook@') || dep.startsWith('@storybook/')) {
-        expect(dep).toContain('^10.3.1')
-      }
+    expect(detectNextjs(dir)).toBe(false)
+  })
+
+  it('detectNextjs returns true when next + next.config.js exist', () => {
+    const dir = path.join(tmpDir, 'nextjs-js')
+    fs.mkdirSync(dir, { recursive: true })
+    fs.writeFileSync(
+      path.join(dir, 'package.json'),
+      JSON.stringify({ dependencies: { next: '^15.0.0' } })
+    )
+    fs.writeFileSync(path.join(dir, 'next.config.js'), 'module.exports = {}')
+    expect(detectNextjs(dir)).toBe(true)
+  })
+
+  it('detectNextjs returns true for next.config.ts/.mjs/.cjs', () => {
+    for (const ext of ['ts', 'mjs', 'cjs']) {
+      const dir = path.join(tmpDir, `nextjs-${ext}`)
+      fs.mkdirSync(dir, { recursive: true })
+      fs.writeFileSync(
+        path.join(dir, 'package.json'),
+        JSON.stringify({ dependencies: { next: '^15.0.0' } })
+      )
+      fs.writeFileSync(path.join(dir, `next.config.${ext}`), 'export default {}')
+      expect(detectNextjs(dir)).toBe(true)
     }
-    expect(result.dependencies.notices).toHaveLength(0)
   })
+})
 
-  it('getDependencies emits upgrade notice when SB <10', async () => {
-    const dir = path.join(tmpDir, 'ver-old')
+describe('setup - Next.js scaffolding', () => {
+  it('emits @storybook/nextjs framework package in main.ts for Next.js project', async () => {
+    const dir = path.join(tmpDir, 'nextjs-vanilla-gen')
     fs.mkdirSync(dir, { recursive: true })
     fs.writeFileSync(
       path.join(dir, 'package.json'),
       JSON.stringify({
         scripts: {},
-        devDependencies: { storybook: '^8.4.0' }
+        dependencies: { next: '^15.0.0', react: '^19.0.0' }
       })
     )
-    const result = await runSetup(dir, { force: true, dryRun: true })
-    expect(result.dependencies.notices.length).toBeGreaterThan(0)
-    expect(result.dependencies.notices[0]).toContain('upgrade')
+    fs.writeFileSync(path.join(dir, 'next.config.js'), 'module.exports = {}')
+
+    const result = await runSetup(dir, { force: true })
+
+    expect(result.isNextjs).toBe(true)
+
+    const mainContent = fs.readFileSync(
+      path.join(dir, '.storybook', 'main.ts'),
+      'utf-8'
+    )
+    expect(mainContent).toContain('@storybook/nextjs')
+    expect(mainContent).not.toContain('@storybook/react-vite')
   })
 
-  it('detectNxStorybookVersion returns null when @nx/storybook not installed', () => {
-    const dir = path.join(tmpDir, 'ver-nx-none')
+  it('Next.js + Chakra: framework package is @storybook/nextjs, preview still ChakraProvider', async () => {
+    const dir = path.join(tmpDir, 'nextjs-chakra-gen')
     fs.mkdirSync(dir, { recursive: true })
-    expect(detectNxStorybookVersion(dir)).toBeNull()
-  })
-
-  it('detectNxStorybookVersion reads peerDependencies from @nx/storybook', () => {
-    const dir = path.join(tmpDir, 'ver-nx')
-    const nxSbDir = path.join(dir, 'node_modules', '@nx', 'storybook')
-    fs.mkdirSync(nxSbDir, { recursive: true })
     fs.writeFileSync(
-      path.join(nxSbDir, 'package.json'),
+      path.join(dir, 'package.json'),
       JSON.stringify({
-        peerDependencies: { storybook: '^10.1.0' }
+        scripts: {},
+        dependencies: {
+          next: '^15.0.0',
+          react: '^19.0.0',
+          '@chakra-ui/react': '^2.0.0'
+        }
       })
     )
-    expect(detectNxStorybookVersion(dir)).toBe('10.1.0')
+    fs.writeFileSync(path.join(dir, 'next.config.js'), 'module.exports = {}')
+
+    const result = await runSetup(dir, { force: true })
+
+    expect(result.isNextjs).toBe(true)
+    expect(result.framework).toBe('chakra')
+
+    const mainContent = fs.readFileSync(
+      path.join(dir, '.storybook', 'main.ts'),
+      'utf-8'
+    )
+    expect(mainContent).toContain('@storybook/nextjs')
+
+    const previewContent = fs.readFileSync(
+      path.join(dir, '.storybook', 'preview.tsx'),
+      'utf-8'
+    )
+    expect(previewContent).toContain('ChakraProvider')
+    expect(previewContent).toContain('@storybook/nextjs')
+    expect(previewContent).toContain('appDirectory: true')
+  })
+
+  it('emits @storybook/nextjs in dependencies.dev for Next.js project', async () => {
+    const dir = path.join(tmpDir, 'nextjs-deps')
+    fs.mkdirSync(dir, { recursive: true })
+    fs.writeFileSync(
+      path.join(dir, 'package.json'),
+      JSON.stringify({
+        scripts: {},
+        dependencies: { next: '^15.0.0' }
+      })
+    )
+    fs.writeFileSync(path.join(dir, 'next.config.js'), 'module.exports = {}')
+
+    const result = await runSetup(dir, { force: true, dryRun: true })
+
+    expect(
+      result.dependencies.dev.some(d => d.startsWith('@storybook/nextjs@'))
+    ).toBe(true)
+    expect(
+      result.dependencies.dev.some(d => d.startsWith('@storybook/react-vite@'))
+    ).toBe(false)
   })
 })

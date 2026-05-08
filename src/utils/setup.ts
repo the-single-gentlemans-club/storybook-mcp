@@ -1,11 +1,21 @@
 /**
  * Storybook Setup Utility
- * Creates .storybook config, updates package.json scripts, and prints dependencies
+ * Creates .storybook config, updates package.json scripts, and prints dependencies.
+ *
+ * Detects:
+ *  - Project type: Nx monorepo vs standard
+ *  - UI framework: Chakra, shadcn, Tamagui, Gluestack, vanilla
+ *  - Next.js: presence of `next` in deps + a `next.config.{js,ts,mjs,cjs}`
+ *
+ * Storybook 10 is the supported floor. The Storybook framework package is
+ * chosen as follows:
+ *  - Next.js project           → @storybook/nextjs
+ *  - Tamagui (no Next.js)      → @storybook/react-webpack5
+ *  - Anything else             → @storybook/react-vite
  */
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { THRESHOLDS, DEFAULT_STORYBOOK_VERSION } from './constants.js'
 
 // ===========================================
 // Types
@@ -22,13 +32,17 @@ export type ProjectType = 'nx' | 'standard'
 export interface SetupConfig {
   projectType: ProjectType
   framework: FrameworkType
+  isNextjs: boolean
   nxLibName?: string
   rootDir: string
+  /** Detected installed Storybook version (e.g. "10.3.1") if any */
+  detectedVersion?: string
 }
 
 export interface SetupResult {
   projectType: ProjectType
   framework: FrameworkType
+  isNextjs: boolean
   nxLibName?: string
   filesCreated: string[]
   scriptsAdded: string[]
@@ -51,143 +65,145 @@ export function detectProjectType(rootDir: string): ProjectType {
   return fs.existsSync(nxJsonPath) ? 'nx' : 'standard'
 }
 
-/**
- * Detect UI framework from package.json dependencies
- */
-export function detectFramework(rootDir: string): FrameworkType {
-  const packagePath = path.join(rootDir, 'package.json')
-
-  if (!fs.existsSync(packagePath)) {
-    return 'vanilla'
-  }
-
+/** Read package.json, returning {} if missing/unreadable */
+function readPackageJson(rootDir: string): Record<string, unknown> {
+  const pkgPath = path.join(rootDir, 'package.json')
+  if (!fs.existsSync(pkgPath)) return {}
   try {
-    const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf-8'))
-    const deps = {
-      ...pkg.dependencies,
-      ...pkg.devDependencies
-    }
-
-    // Check in order of specificity
-    if (deps['@chakra-ui/react']) {
-      return 'chakra'
-    }
-
-    // shadcn/ui detection — cast a wide net:
-    //   components.json  → definitive shadcn CLI project
-    //   @radix-ui/*      → any Radix primitive (traditional shadcn)
-    //   @base-ui-components/react → Base UI (newer shadcn replacement for Radix)
-    //   class-variance-authority → cva, canonical shadcn pattern
-    //   tailwindcss      → almost always paired with shadcn in React projects
-    //   lucide-react     → the default icon set bundled by shadcn CLI
-    const hasComponentsJson = fs.existsSync(
-      path.join(rootDir, 'components.json')
-    )
-    const hasAnyRadix = Object.keys(deps).some(k => k.startsWith('@radix-ui/'))
-    if (
-      hasComponentsJson ||
-      hasAnyRadix ||
-      deps['@base-ui-components/react'] ||
-      deps['class-variance-authority'] ||
-      deps['lucide-react'] ||
-      deps.tailwindcss
-    ) {
-      // Likely shadcn/ui (or a compatible tailwind-based design system)
-      return 'shadcn'
-    }
-    if (deps.tamagui) {
-      return 'tamagui'
-    }
-    if (deps['@gluestack-ui/themed'] || deps['@gluestack-ui/config']) {
-      return 'gluestack'
-    }
-
-    return 'vanilla'
+    return JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
   } catch {
-    return 'vanilla'
+    return {}
   }
 }
 
+function getDeps(rootDir: string): Record<string, string> {
+  const pkg = readPackageJson(rootDir) as {
+    dependencies?: Record<string, string>
+    devDependencies?: Record<string, string>
+  }
+  return { ...pkg.dependencies, ...pkg.devDependencies }
+}
+
 /**
- * Detect the Storybook version installed in the consumer project.
- * Checks node_modules first (actual installed), then package.json declarations.
- * Returns the bare version string (e.g. "10.3.1") or null if not found.
+ * Detect Next.js project: requires `next` in deps AND a next.config.* file at root.
+ * Both signals are needed to avoid false positives — a transitive `next` dep
+ * doesn't make the project a Next.js app.
+ */
+export function detectNextjs(rootDir: string): boolean {
+  const deps = getDeps(rootDir)
+  if (!deps.next) return false
+  const configFiles = [
+    'next.config.js',
+    'next.config.ts',
+    'next.config.mjs',
+    'next.config.cjs'
+  ]
+  return configFiles.some(f => fs.existsSync(path.join(rootDir, f)))
+}
+
+/**
+ * Detect UI framework from package.json dependencies and project signals.
+ *
+ * shadcn detection casts a wide net (matches cli.ts/autoDetectConfig):
+ *   components.json → definitive shadcn CLI project
+ *   @radix-ui/*     → any Radix primitive
+ *   @base-ui-components/react → newer shadcn replacement for Radix
+ *   class-variance-authority → canonical shadcn pattern
+ *   tailwindcss     → almost always paired with shadcn
+ *   lucide-react    → default icon set bundled by shadcn CLI
+ */
+export function detectFramework(rootDir: string): FrameworkType {
+  const deps = getDeps(rootDir)
+
+  if (deps['@chakra-ui/react']) return 'chakra'
+  if (deps.tamagui || deps['@tamagui/core']) return 'tamagui'
+  if (deps['@gluestack-ui/themed'] || deps['@gluestack-ui/config']) {
+    return 'gluestack'
+  }
+
+  const hasComponentsJson = fs.existsSync(path.join(rootDir, 'components.json'))
+  const hasAnyRadix = Object.keys(deps).some(k => k.startsWith('@radix-ui/'))
+  if (
+    hasComponentsJson ||
+    hasAnyRadix ||
+    deps['@base-ui-components/react'] ||
+    deps['class-variance-authority'] ||
+    deps['lucide-react'] ||
+    deps.tailwindcss
+  ) {
+    return 'shadcn'
+  }
+
+  return 'vanilla'
+}
+
+/**
+ * Detect the installed Storybook version. Returns the resolved semver string
+ * (e.g. "10.3.1") or null if no installation can be found.
+ *
+ * Resolution order:
+ *  1. node_modules/storybook/package.json → version (most accurate)
+ *  2. package.json devDependencies/dependencies "storybook" range → strip ^/~
  */
 export function detectInstalledStorybookVersion(
   rootDir: string
 ): string | null {
-  // 1. Check actual installed package
-  const nmSbPkg = path.join(
-    rootDir,
-    'node_modules',
-    'storybook',
-    'package.json'
-  )
-  if (fs.existsSync(nmSbPkg)) {
+  // 1. Prefer installed version from node_modules
+  const nmPkg = path.join(rootDir, 'node_modules', 'storybook', 'package.json')
+  if (fs.existsSync(nmPkg)) {
     try {
-      const pkg = JSON.parse(fs.readFileSync(nmSbPkg, 'utf-8'))
-      if (typeof pkg.version === 'string') return pkg.version
+      const parsed = JSON.parse(fs.readFileSync(nmPkg, 'utf-8')) as {
+        version?: string
+      }
+      if (parsed.version) return parsed.version
     } catch {
       /* ignore */
     }
   }
 
-  // 2. Fall back to package.json declaration (strip ^ ~ >= < prefixes)
-  const packagePath = path.join(rootDir, 'package.json')
-  if (fs.existsSync(packagePath)) {
-    try {
-      const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf-8'))
-      const deps = {
-        ...(pkg.dependencies ?? {}),
-        ...(pkg.devDependencies ?? {})
-      }
-      const raw = deps['storybook'] ?? deps['@storybook/core']
-      if (typeof raw === 'string') {
-        return raw.replace(/^[\^~>=<\s]+/, '').split(/\s/)[0]
-      }
-    } catch {
-      /* ignore */
-    }
+  // 2. Fall back to declared range in package.json
+  const deps = getDeps(rootDir)
+  const declared = deps.storybook
+  if (declared) {
+    return declared.replace(/^[\^~>=<\s]+/, '').trim() || null
   }
 
   return null
 }
 
 /**
- * For Nx projects, detect the Storybook version that @nx/storybook was built for.
- * Uses peerDependencies of @nx/storybook in node_modules, then falls back to
- * the general installed-version check.
+ * Detect the Storybook version peerDep declared by an installed @nx/storybook.
+ * Useful in Nx monorepos where the user manages Storybook through Nx.
+ *
+ * Returns the resolved version (e.g. "10.1.0") or null if @nx/storybook is not
+ * installed or doesn't declare a storybook peerDep.
  */
 export function detectNxStorybookVersion(rootDir: string): string | null {
-  const nxSbPkg = path.join(
+  const pkgPath = path.join(
     rootDir,
     'node_modules',
     '@nx',
     'storybook',
     'package.json'
   )
-  if (fs.existsSync(nxSbPkg)) {
-    try {
-      const pkg = JSON.parse(fs.readFileSync(nxSbPkg, 'utf-8'))
-      const peerDeps: Record<string, string> = pkg.peerDependencies ?? {}
-      const raw = peerDeps['storybook'] ?? peerDeps['@storybook/core']
-      if (typeof raw === 'string') {
-        return raw.replace(/^[\^~>=<\s]+/, '').split(/\s/)[0]
-      }
-    } catch {
-      /* ignore */
+  if (!fs.existsSync(pkgPath)) return null
+  try {
+    const parsed = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as {
+      peerDependencies?: Record<string, string>
     }
+    const range = parsed.peerDependencies?.storybook
+    if (!range) return null
+    return range.replace(/^[\^~>=<\s]+/, '').trim() || null
+  } catch {
+    return null
   }
-
-  return detectInstalledStorybookVersion(rootDir)
 }
 
 /**
- * Find the main library name in an Nx monorepo
- * Prioritizes UI-related libraries over others
+ * Find the main library name in an Nx monorepo.
+ * Prioritizes UI-related libraries over others.
  */
 export function findNxLibName(rootDir: string): string | undefined {
-  // Check common locations
   const libsDir = path.join(rootDir, 'libs')
   const packagesDir = path.join(rootDir, 'packages')
 
@@ -201,12 +217,9 @@ export function findNxLibName(rootDir: string): string | undefined {
   ]
 
   for (const { dir, name } of nestedUiPaths) {
-    if (fs.existsSync(dir)) {
-      return name
-    }
+    if (fs.existsSync(dir)) return name
   }
 
-  // Prioritize libraries with UI-related names
   const uiRelatedNames = [
     'ui',
     'components',
@@ -225,41 +238,33 @@ export function findNxLibName(rootDir: string): string | undefined {
 
     const entries = fs.readdirSync(dir, { withFileTypes: true })
     for (const entry of entries) {
-      if (entry.isDirectory()) {
-        const projectJson = path.join(dir, entry.name, 'project.json')
-        const srcDir = path.join(dir, entry.name, 'src')
+      if (!entry.isDirectory()) continue
+      const projectJson = path.join(dir, entry.name, 'project.json')
+      const srcDir = path.join(dir, entry.name, 'src')
 
-        if (fs.existsSync(projectJson) || fs.existsSync(srcDir)) {
-          let hasStorybook = false
+      if (fs.existsSync(projectJson) || fs.existsSync(srcDir)) {
+        let hasStorybook = false
 
-          // Check for storybook target in project.json
-          if (fs.existsSync(projectJson)) {
-            try {
-              const project = JSON.parse(fs.readFileSync(projectJson, 'utf-8'))
-              if (project.targets?.storybook) {
-                hasStorybook = true
-              }
-            } catch {
-              // ignore
-            }
+        if (fs.existsSync(projectJson)) {
+          try {
+            const project = JSON.parse(fs.readFileSync(projectJson, 'utf-8'))
+            if (project.targets?.storybook) hasStorybook = true
+          } catch {
+            /* ignore */
           }
-
-          const isUiRelated =
-            uiRelatedNames.includes(entry.name.toLowerCase()) ||
-            entry.name.toLowerCase().includes('ui') ||
-            entry.name.toLowerCase().includes('component')
-
-          allLibs.push({
-            name: entry.name,
-            hasStorybook,
-            isUiRelated
-          })
         }
+
+        const lower = entry.name.toLowerCase()
+        const isUiRelated =
+          uiRelatedNames.includes(lower) ||
+          lower.includes('ui') ||
+          lower.includes('component')
+
+        allLibs.push({ name: entry.name, hasStorybook, isUiRelated })
       }
     }
   }
 
-  // Sort: prioritize storybook > UI-related > others
   allLibs.sort((a, b) => {
     if (a.hasStorybook && !b.hasStorybook) return -1
     if (!a.hasStorybook && b.hasStorybook) return 1
@@ -273,73 +278,28 @@ export function findNxLibName(rootDir: string): string | undefined {
 
 /**
  * Resolve the actual filesystem path for an Nx library name.
- * findNxLibName() returns only the name; libraries can live in libs/ or packages/.
  */
 function resolveNxLibPath(rootDir: string, nxLibName: string): string | null {
-  // nxLibName can be "ui", "shared-ui", "portal-ui", etc.
-  // The name is derived from the path: libs/shared/ui → "shared-ui"
-  // So we convert dashes back to path separators and search
+  const libsDir = path.join(rootDir, 'libs')
+  const packagesDir = path.join(rootDir, 'packages')
 
-  for (const base of ['libs', 'packages']) {
-    const baseDir = path.join(rootDir, base)
-    if (!fs.existsSync(baseDir)) continue
-
-    // Try direct match: libs/<nxLibName>
-    const directPath = path.join(baseDir, nxLibName)
-    if (fs.existsSync(directPath)) {
-      return `${base}/${nxLibName}`
+  const nestedPaths: Array<{ dir: string; name: string }> = [
+    { dir: path.join(libsDir, 'shared', 'ui'), name: 'shared-ui' },
+    { dir: path.join(libsDir, 'ui'), name: 'ui' },
+    { dir: path.join(packagesDir, 'ui'), name: 'ui' }
+  ]
+  for (const { dir, name } of nestedPaths) {
+    if (name === nxLibName && fs.existsSync(dir)) {
+      return path.relative(rootDir, dir)
     }
-
-    // Try nested match: convert "shared-ui" → "shared/ui"
-    const nestedPath = path.join(baseDir, ...nxLibName.split('-'))
-    if (fs.existsSync(nestedPath)) {
-      return path.relative(rootDir, nestedPath).replace(/\\/g, '/')
-    }
-
-    // Walk up to 2 levels deep looking for a project.json with matching name
-    const walkFind = (dir: string, depth: number): string | null => {
-      if (depth > 2) return null
-      const entries = fs.readdirSync(dir, { withFileTypes: true })
-      for (const entry of entries) {
-        if (
-          !entry.isDirectory() ||
-          entry.name.startsWith('.') ||
-          entry.name === 'node_modules'
-        )
-          continue
-        const entryPath = path.join(dir, entry.name)
-        const projectJsonPath = path.join(entryPath, 'project.json')
-
-        if (fs.existsSync(projectJsonPath)) {
-          // Check if project.json name matches
-          try {
-            const project = JSON.parse(
-              fs.readFileSync(projectJsonPath, 'utf-8')
-            )
-            if (project.name === nxLibName) {
-              return path.relative(rootDir, entryPath).replace(/\\/g, '/')
-            }
-          } catch {
-            /* ignore */
-          }
-
-          // Also check by derived name from path
-          const nameParts = path.relative(baseDir, entryPath).split(path.sep)
-          if (nameParts.join('-') === nxLibName) {
-            return path.relative(rootDir, entryPath).replace(/\\/g, '/')
-          }
-        }
-
-        const found = walkFind(entryPath, depth + 1)
-        if (found) return found
-      }
-      return null
-    }
-
-    const found = walkFind(baseDir, 0)
-    if (found) return found
   }
 
+  for (const base of ['libs', 'packages']) {
+    const fullPath = path.join(rootDir, base, nxLibName)
+    if (fs.existsSync(fullPath)) {
+      return `${base}/${nxLibName}`
+    }
+  }
   return null
 }
 
@@ -348,43 +308,34 @@ function resolveNxLibPath(rootDir: string, nxLibName: string): string | null {
 // ===========================================
 
 /**
+ * Pick the Storybook framework package given UI framework + Next.js flag.
+ * Next.js wins when present — official guidance is to use @storybook/nextjs
+ * even when paired with a UI lib like Chakra/shadcn (the UI lib still drives
+ * preview decorators).
+ */
+function getFrameworkPackage(framework: FrameworkType, isNextjs: boolean): string {
+  if (isNextjs) return '@storybook/nextjs'
+  if (framework === 'tamagui') return '@storybook/react-webpack5'
+  return '@storybook/react-vite'
+}
+
+/**
  * Generate main.ts content
  */
 function generateMainTs(config: SetupConfig): string {
-  const { projectType, framework } = config
+  const { projectType, framework, isNextjs } = config
+  const frameworkPackage = getFrameworkPackage(framework, isNextjs)
 
-  const addons: string[] = ['@storybook/addon-docs', '@storybook/addon-a11y']
+  // Storybook 10: docs and a11y addons are still installed/declared explicitly
+  // even though essentials/interactions are bundled into the main package.
+  const addons = ['@storybook/addon-docs', '@storybook/addon-a11y']
 
-  // Detect if this is a React Native/Expo project
-  const packagePath = path.join(config.rootDir, 'package.json')
-  let isReactNative = false
-  if (fs.existsSync(packagePath)) {
-    try {
-      const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf-8'))
-      const deps = { ...pkg.dependencies, ...pkg.devDependencies }
-      isReactNative = !!(deps['react-native'] || deps['expo'])
-    } catch {
-      // Ignore errors
-    }
-  }
-
-  // Stories glob — include app directory for React Native/Expo projects
-  const storiesGlob = ['../src/**/*.@(mdx|stories.@(js|jsx|ts|tsx))']
-
-  // Add app directory for Expo Router / React Native projects
-  if (isReactNative) {
-    storiesGlob.push('../app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))')
-  }
-
-  // Determine the framework package
-  let frameworkPackage = '@storybook/react-vite'
-  if (framework === 'tamagui') {
-    // Tamagui works best with webpack for now
-    frameworkPackage = '@storybook/react-webpack5'
-  } else {
-    // Add Vitest addon for Vite-based projects (SB 10+ recommendation)
-    addons.push('@storybook/addon-vitest')
-  }
+  // Stories glob — Storybook 10 prefers the combined `mdx | stories.*` form
+  // so MDX docs and CSF stories are picked up by the same pattern.
+  const storiesGlob =
+    projectType === 'nx'
+      ? ['../libs/**/src/**/*.@(mdx|stories.@(js|jsx|ts|tsx))']
+      : ['../src/**/*.@(mdx|stories.@(js|jsx|ts|tsx))']
 
   return `import type { StorybookConfig } from '${frameworkPackage}';
 
@@ -405,25 +356,53 @@ export default config;
 }
 
 /**
- * Generate preview.ts content based on framework
+ * Pick the Storybook type-package import path used in `preview.tsx`.
+ * Mirrors getFrameworkPackage but for the preview file's `import type { Preview }`.
  */
-function generatePreviewTs(framework: FrameworkType): string {
+function getPreviewTypeSource(framework: FrameworkType, isNextjs: boolean): string {
+  if (isNextjs) return '@storybook/nextjs'
+  if (framework === 'tamagui') return '@storybook/react-webpack5'
+  return '@storybook/react-vite'
+}
+
+/**
+ * Generate preview.tsx content based on framework. JSX inside .ts files is fine
+ * with Storybook's TypeScript config (it injects React.createElement at build time).
+ */
+function generatePreviewTs(config: SetupConfig): string {
+  const { framework, isNextjs } = config
+  const previewSource = getPreviewTypeSource(framework, isNextjs)
+
   switch (framework) {
     case 'chakra':
-      return generateChakraPreview()
+      return generateChakraPreview(previewSource, isNextjs)
     case 'shadcn':
-      return generateShadcnPreview()
+      return generateShadcnPreview(previewSource, isNextjs)
     case 'tamagui':
-      return generateTamaguiPreview()
+      return generateTamaguiPreview(previewSource)
     case 'gluestack':
-      return generateGluestackPreview()
+      return generateGluestackPreview(previewSource)
     default:
-      return generateVanillaPreview()
+      return generateVanillaPreview(previewSource, isNextjs)
   }
 }
 
-function generateChakraPreview(): string {
-  return `import type { Preview } from '@storybook/react';
+// Backwards-compat alias: older callers referenced generatePreviewTsx.
+function generatePreviewTsx(config: SetupConfig): string {
+  return generatePreviewTs(config)
+}
+
+function nextjsParametersBlock(isNextjs: boolean): string {
+  if (!isNextjs) return ''
+  return `    nextjs: {
+      // Use the App Router by default — flip to false to emulate the Pages Router.
+      appDirectory: true,
+    },
+`
+}
+
+function generateChakraPreview(typeSource: string, isNextjs: boolean): string {
+  return `import type { Preview } from '${typeSource}';
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import React from 'react';
 
@@ -436,7 +415,7 @@ const theme = extendTheme({
 
 const preview: Preview = {
   parameters: {
-    controls: {
+${nextjsParametersBlock(isNextjs)}    controls: {
       matchers: {
         color: /(background|color)$/i,
         date: /Date$/i,
@@ -456,8 +435,8 @@ export default preview;
 `
 }
 
-function generateShadcnPreview(): string {
-  return `import type { Preview } from '@storybook/react';
+function generateShadcnPreview(typeSource: string, isNextjs: boolean): string {
+  return `import type { Preview } from '${typeSource}';
 import '../src/index.css'; // or your global CSS with Tailwind
 import React from 'react';
 
@@ -466,7 +445,7 @@ import React from 'react';
 
 const preview: Preview = {
   parameters: {
-    controls: {
+${nextjsParametersBlock(isNextjs)}    controls: {
       matchers: {
         color: /(background|color)$/i,
         date: /Date$/i,
@@ -499,8 +478,8 @@ export default preview;
 `
 }
 
-function generateTamaguiPreview(): string {
-  return `import type { Preview } from '@storybook/react';
+function generateTamaguiPreview(typeSource: string): string {
+  return `import type { Preview } from '${typeSource}';
 import { TamaguiProvider } from 'tamagui';
 import React from 'react';
 
@@ -518,9 +497,7 @@ const preview: Preview = {
   },
   decorators: [
     (Story) => (
-      // IMPORTANT: Replace {} with your actual Tamagui config import
-      // import config from '../tamagui.config'
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // Replace with your actual config import
       <TamaguiProvider config={{} as any} defaultTheme="light">
         <Story />
       </TamaguiProvider>
@@ -532,42 +509,8 @@ export default preview;
 `
 }
 
-/**
- * Generate vite.config.ts with React Native Web aliasing
- */
-function generateViteConfig(): string {
-  return `import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { resolve } from 'path'
-
-export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      // Alias React Native to React Native Web for Storybook
-      'react-native': 'react-native-web',
-      '@': resolve(__dirname, './src'),
-    },
-    extensions: [
-      '.web.tsx',
-      '.web.ts',
-      '.web.jsx',
-      '.web.js',
-      '.tsx',
-      '.ts',
-      '.jsx',
-      '.js',
-    ],
-  },
-  optimizeDeps: {
-    include: ['react-native-web'],
-  },
-})
-`
-}
-
-function generateGluestackPreview(): string {
-  return `import type { Preview } from '@storybook/react';
+function generateGluestackPreview(typeSource: string): string {
+  return `import type { Preview } from '${typeSource}';
 import { GluestackUIProvider } from '@gluestack-ui/themed';
 import { config } from '@gluestack-ui/config';
 import React from 'react';
@@ -594,8 +537,8 @@ export default preview;
 `
 }
 
-function generateVanillaPreview(): string {
-  return `import type { Preview } from '@storybook/react';
+function generateVanillaPreview(typeSource: string, isNextjs: boolean): string {
+  return `import type { Preview } from '${typeSource}';
 import React from 'react';
 
 // Import your global styles if any
@@ -603,7 +546,7 @@ import React from 'react';
 
 const preview: Preview = {
   parameters: {
-    controls: {
+${nextjsParametersBlock(isNextjs)}    controls: {
       matchers: {
         color: /(background|color)$/i,
         date: /Date$/i,
@@ -641,8 +584,7 @@ function getScripts(config: SetupConfig): PackageScripts {
   return {
     storybook: 'storybook dev -p 6006',
     'build-storybook': 'storybook build',
-    'test-storybook': 'test-storybook',
-    prestorybook: 'npx forgekit-storybook-mcp --cleanup-only'
+    'test-storybook': 'test-storybook'
   }
 }
 
@@ -650,89 +592,66 @@ function getScripts(config: SetupConfig): PackageScripts {
 // Dependencies
 // ===========================================
 
-export interface Dependencies {
+interface Dependencies {
   dev: string[]
   prod: string[]
-  /** Notices to display to the user (e.g. upgrade prompts) */
   notices: string[]
 }
 
+/**
+ * Build the dependency list, using the detected Storybook version when present.
+ *
+ * Behaviour:
+ *  - If a Storybook ≥10 install is detected (node_modules or package.json),
+ *    pin all @storybook packages to that exact range (`^10.3.1` style).
+ *  - If a Storybook <10 install is detected, emit an upgrade notice and pin
+ *    to the default 10.x range.
+ *  - If nothing is detected, pin to the default 10.x range silently.
+ */
 function getDependencies(config: SetupConfig): Dependencies {
-  const { framework, projectType, rootDir } = config
+  const { framework, isNextjs, detectedVersion } = config
   const notices: string[] = []
 
-  // Resolve which Storybook version to pin the install suggestions to.
-  // - Nx: match whatever version @nx/storybook was built for
-  // - Standard with SB ≥10 installed: use that exact version
-  // - Standard with SB <10: keep their version but emit an upgrade prompt
-  // - Nothing installed yet: default to 10.2.0
-  let sbVersion: string
+  // Default fallback range
+  let range = '^10.0.0'
 
-  if (projectType === 'nx') {
-    const nxVersion = detectNxStorybookVersion(rootDir)
-    sbVersion = nxVersion ?? DEFAULT_STORYBOOK_VERSION
-  } else {
-    const installed = detectInstalledStorybookVersion(rootDir)
-    if (installed) {
-      const major = parseInt(installed.split('.')[0], 10)
-      if (major >= 10) {
-        sbVersion = installed
-      } else {
-        notices.push(
-          `⚠️  Storybook ${installed} detected — v10+ is required for full compatibility.\n` +
-            `   Run: npx storybook@latest upgrade`
-        )
-        sbVersion = installed
-      }
+  if (detectedVersion) {
+    const major = parseInt(detectedVersion.split('.')[0], 10)
+    if (major >= 10) {
+      range = `^${detectedVersion}`
     } else {
-      // Fresh install — default to latest stable 10
-      sbVersion = DEFAULT_STORYBOOK_VERSION
+      notices.push(
+        `Detected storybook@${detectedVersion} — please upgrade to v10. ` +
+          `Run: npx storybook@latest upgrade`
+      )
     }
   }
 
-  const sbRange = `^${sbVersion}`
-
+  // Storybook 10.x — addons (essentials, interactions, blocks) are bundled into
+  // the main `storybook` package. We still install separate addon packages for
+  // docs and a11y, plus the framework package and react integration.
   const dev: string[] = [
-    `storybook@${sbRange}`,
-    `@storybook/react@${sbRange}`,
-    `@storybook/addon-docs@${sbRange}`,
-    `@storybook/addon-a11y@${sbRange}`
+    `storybook@${range}`,
+    `@storybook/react@${range}`,
+    `@storybook/addon-docs@${range}`,
+    `@storybook/addon-a11y@${range}`,
+    '@storybook/test-runner@^0.24.0'
   ]
 
-  // Add framework-specific bundler
-  if (framework === 'tamagui') {
-    dev.push(`@storybook/react-webpack5@${sbRange}`)
-    dev.push('@storybook/test-runner@^0.24.0')
+  // Framework package — Next.js wins when present.
+  if (isNextjs) {
+    dev.push(`@storybook/nextjs@${range}`)
+  } else if (framework === 'tamagui') {
+    dev.push(`@storybook/react-webpack5@${range}`)
   } else {
-    dev.push(`@storybook/react-vite@${sbRange}`)
-    // Vitest addon is recommended for Vite-based projects in SB 10+
-    dev.push(`@storybook/addon-vitest@${sbRange}`)
+    dev.push(`@storybook/react-vite@${range}`)
   }
 
-  // Add Nx-specific if needed
-  if (projectType === 'nx') {
+  if (config.projectType === 'nx') {
     dev.push('@nx/storybook@latest')
   }
 
-  const prod: string[] = []
-
-  // Framework-specific dependencies (usually already installed)
-  switch (framework) {
-    case 'chakra':
-      // ChakraProvider is part of @chakra-ui/react
-      break
-    case 'shadcn':
-      // Usually already have tailwindcss
-      break
-    case 'tamagui':
-      // Usually already have tamagui
-      break
-    case 'gluestack':
-      // Usually already have @gluestack-ui/themed and @gluestack-ui/config
-      break
-  }
-
-  return { dev, prod, notices }
+  return { dev, prod: [], notices }
 }
 
 // ===========================================
@@ -754,19 +673,27 @@ export async function runSetup(
   // Detect configuration
   const projectType = detectProjectType(rootDir)
   const framework = detectFramework(rootDir)
+  const isNextjs = detectNextjs(rootDir)
   const nxLibName =
     libName || (projectType === 'nx' ? findNxLibName(rootDir) : undefined)
+  const detectedVersion =
+    detectInstalledStorybookVersion(rootDir) ??
+    detectNxStorybookVersion(rootDir) ??
+    undefined
 
   const config: SetupConfig = {
     projectType,
     framework,
+    isNextjs,
     nxLibName,
-    rootDir
+    rootDir,
+    detectedVersion: detectedVersion ?? undefined
   }
 
   const result: SetupResult = {
     projectType,
     framework,
+    isNextjs,
     nxLibName,
     filesCreated: [],
     scriptsAdded: [],
@@ -777,79 +704,83 @@ export async function runSetup(
   console.log(
     `  Project type: ${projectType === 'nx' ? 'Nx Monorepo' : 'Standard'}`
   )
-  console.log(`  UI Framework: ${framework}`)
-  if (nxLibName) {
-    console.log(`  Nx Library: ${nxLibName}`)
-  }
-
-  // Print any version-related notices (e.g. upgrade prompts)
-  for (const notice of result.dependencies.notices) {
-    console.log(`\n  ${notice}`)
-  }
+  console.log(`  UI Framework: ${framework}${isNextjs ? ' (+ Next.js)' : ''}`)
+  if (nxLibName) console.log(`  Nx Library: ${nxLibName}`)
+  if (detectedVersion) console.log(`  Detected Storybook: ${detectedVersion}`)
   console.log('')
 
-  // Determine where .storybook config should live
-  let storybookDir: string
-
+  // Nx: guide user through Nx generator instead of writing files
   if (projectType === 'nx') {
     const targetLib = nxLibName || '<project-name>'
-
-    if (!nxLibName) {
-      console.log(
-        '  ⚠️  Could not auto-detect an Nx library. Use --lib=<name> to specify one.'
-      )
-      console.log(
-        `     npx forgekit-storybook-mcp --setup --lib=<project-name>`
-      )
-      console.log('')
-      return result
-    }
-
-    // Resolve actual lib path
-    const libBasePath = resolveNxLibPath(rootDir, nxLibName)
-    if (!libBasePath) {
-      console.log(
-        `  ⚠️  Could not find library "${nxLibName}" in libs/ or packages/`
-      )
-      console.log('')
-      return result
-    }
-
-    storybookDir = path.join(rootDir, libBasePath, '.storybook')
-    console.log(`  📍 Nx library: ${targetLib} (${libBasePath})`)
-
-    // Check if @nx/storybook is installed and suggest it
     const nxStorybookInstalled = fs.existsSync(
       path.join(rootDir, 'node_modules', '@nx', 'storybook')
     )
-    if (nxStorybookInstalled) {
+
+    const libBasePath = nxLibName ? resolveNxLibPath(rootDir, nxLibName) : null
+    const libStorybookDir = libBasePath
+      ? path.join(rootDir, libBasePath, '.storybook')
+      : null
+    const nxStorybookConfigured =
+      libStorybookDir && fs.existsSync(libStorybookDir)
+
+    if (nxStorybookConfigured) {
+      console.log(`  ✅ Storybook already configured for ${targetLib} via Nx`)
+      console.log(`     Config: ${libBasePath}/.storybook/`)
+      console.log('')
+    } else {
       console.log(
-        `  💡 Tip: You can also use \`npx nx g @nx/storybook:configuration ${targetLib}\` for Nx-native setup`
+        '  📋 Nx monorepo detected — use the Nx Storybook generator for proper setup:\n'
       )
+
+      let step = 1
+      if (!nxStorybookInstalled) {
+        console.log(`  ${step++}. Install @nx/storybook:`)
+        console.log(`     npm install -D @nx/storybook@latest`)
+        console.log('')
+      }
+      console.log(`  ${step++}. Generate Storybook configuration:`)
+      console.log(`     npx nx g @nx/storybook:configuration ${targetLib}`)
+      console.log('')
+
+      const createdPath = libBasePath || `libs/${targetLib}`
+      console.log('  This creates:')
+      console.log(`     • ${createdPath}/.storybook/main.ts`)
+      console.log(`     • ${createdPath}/.storybook/preview.tsx`)
+      console.log(`     • storybook + build-storybook targets in project.json`)
+      console.log('')
+
+      console.log(`  ${step++}. Install remaining Storybook packages:`)
+      console.log(`     npm install -D ${result.dependencies.dev.join(' ')}`)
+      console.log('')
+      console.log(`  ${step}. Run Storybook:`)
+      console.log(`     npx nx storybook ${targetLib}`)
+      console.log('')
     }
-    console.log('')
-  } else {
-    storybookDir = path.join(rootDir, '.storybook')
+
+    if (result.dependencies.notices.length > 0) {
+      console.log('  ⚠️  Notices:')
+      for (const n of result.dependencies.notices) console.log(`     • ${n}`)
+      console.log('')
+    }
+
+    if (dryRun) console.log('ℹ️  Dry run mode\n')
+
+    return result
   }
 
-  // Create .storybook directory
+  // Standard project — write .storybook/{main.ts, preview.tsx}
+  const storybookDir = path.join(rootDir, '.storybook')
+
   if (!fs.existsSync(storybookDir)) {
-    if (!dryRun) {
-      fs.mkdirSync(storybookDir, { recursive: true })
-    }
-    const relDir = path.relative(rootDir, storybookDir)
-    console.log(`  📁 Created ${relDir}/`)
+    if (!dryRun) fs.mkdirSync(storybookDir, { recursive: true })
+    console.log(`  📁 Created .storybook/`)
   }
 
-  // Generate main.ts
+  // main.ts
   const mainPath = path.join(storybookDir, 'main.ts')
   const mainExists = fs.existsSync(mainPath)
-
   if (!mainExists || force) {
-    const mainContent = generateMainTs(config)
-    if (!dryRun) {
-      fs.writeFileSync(mainPath, mainContent)
-    }
+    if (!dryRun) fs.writeFileSync(mainPath, generateMainTs(config))
     result.filesCreated.push('.storybook/main.ts')
     console.log(
       `  📄 ${mainExists ? 'Overwrote' : 'Created'} .storybook/main.ts`
@@ -860,69 +791,15 @@ export async function runSetup(
     )
   }
 
-  // Generate preview.tsx (uses JSX in decorators)
-  const previewTsxPath = path.join(storybookDir, 'preview.tsx')
-  const previewTsxExists = fs.existsSync(previewTsxPath)
-  const legacyPreviewPath = path.join(storybookDir, 'preview.ts')
-  const legacyPreviewExists = fs.existsSync(legacyPreviewPath)
-
-  if (legacyPreviewExists && !previewTsxExists) {
-    // preview.ts exists — check content
-    const content = fs.readFileSync(legacyPreviewPath, 'utf-8').trim()
-    const hasJsx = /<\w+[\s/>]/.test(content) || content.includes('JSX')
-    const isEmpty = content.length === 0
-    const isMinimal = content.length < THRESHOLDS.EMPTY_FILE_SIZE // Nearly empty / boilerplate only
-
-    if (isEmpty || isMinimal) {
-      // Empty or minimal — replace with generated preview.tsx
-      const previewContent = generatePreviewTs(framework)
-      if (!dryRun) {
-        fs.unlinkSync(legacyPreviewPath)
-        fs.writeFileSync(previewTsxPath, previewContent)
-      }
-      result.filesCreated.push('.storybook/preview.tsx')
-      console.log(`  📄 Replaced empty .storybook/preview.ts with preview.tsx`)
-    } else if (hasJsx) {
-      // Has JSX content — just rename to .tsx
-      if (!dryRun) {
-        fs.renameSync(legacyPreviewPath, previewTsxPath)
-      }
-      console.log(
-        `  📄 Renamed .storybook/preview.ts → preview.tsx (contains JSX)`
-      )
-    } else if (force) {
-      // --force: overwrite with generated content as .tsx
-      const previewContent = generatePreviewTs(framework)
-      if (!dryRun) {
-        fs.unlinkSync(legacyPreviewPath)
-        fs.writeFileSync(previewTsxPath, previewContent)
-      }
-      result.filesCreated.push('.storybook/preview.tsx')
-      console.log(`  📄 Replaced .storybook/preview.ts with preview.tsx`)
-    } else {
-      console.log(
-        `  ⚠️  .storybook/preview.ts should be preview.tsx (decorators use JSX). Use --force to replace.`
-      )
-    }
-  } else if (!previewTsxExists && !legacyPreviewExists) {
-    // No preview at all — create fresh
-    const previewContent = generatePreviewTs(framework)
-    if (!dryRun) {
-      fs.writeFileSync(previewTsxPath, previewContent)
-    }
+  // preview.tsx
+  const previewPath = path.join(storybookDir, 'preview.tsx')
+  const previewExists = fs.existsSync(previewPath)
+  if (!previewExists || force) {
+    if (!dryRun) fs.writeFileSync(previewPath, generatePreviewTs(config))
     result.filesCreated.push('.storybook/preview.tsx')
-    console.log(`  📄 Created .storybook/preview.tsx`)
-  } else if (force && previewTsxExists) {
-    // --force with existing .tsx — overwrite
-    const previewContent = generatePreviewTs(framework)
-    if (!dryRun) {
-      fs.writeFileSync(previewTsxPath, previewContent)
-      if (legacyPreviewExists) {
-        fs.unlinkSync(legacyPreviewPath)
-      }
-    }
-    result.filesCreated.push('.storybook/preview.tsx')
-    console.log(`  📄 Overwrote .storybook/preview.tsx`)
+    console.log(
+      `  📄 ${previewExists ? 'Overwrote' : 'Created'} .storybook/preview.tsx`
+    )
   } else {
     console.log(
       `  ⏭️  Skipped .storybook/preview.tsx (already exists, use --force to overwrite)`
@@ -935,7 +812,6 @@ export async function runSetup(
     const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf-8'))
     const scripts = getScripts(config)
     const scriptsToAdd: string[] = []
-
     pkg.scripts = pkg.scripts || {}
 
     for (const [name, command] of Object.entries(scripts)) {
@@ -947,7 +823,7 @@ export async function runSetup(
 
     if (scriptsToAdd.length > 0) {
       if (!dryRun) {
-        fs.writeFileSync(packagePath, `${JSON.stringify(pkg, null, 2)}\n`)
+        fs.writeFileSync(packagePath, JSON.stringify(pkg, null, 2) + '\n')
       }
       result.scriptsAdded = scriptsToAdd
       console.log(
@@ -958,62 +834,20 @@ export async function runSetup(
     }
   }
 
-  // Generate vite.config.ts for React Native projects
-  const packagePath2 = path.join(rootDir, 'package.json')
-  let isReactNative = false
-  if (fs.existsSync(packagePath2)) {
-    try {
-      const pkg = JSON.parse(fs.readFileSync(packagePath2, 'utf-8'))
-      const deps = { ...pkg.dependencies, ...pkg.devDependencies }
-      isReactNative = !!(deps['react-native'] || deps['expo'])
-    } catch {
-      // Ignore errors
-    }
-  }
-
-  if (isReactNative) {
-    const viteConfigPath = path.join(rootDir, 'vite.config.ts')
-    const viteConfigExists = fs.existsSync(viteConfigPath)
-
-    if (!viteConfigExists || force) {
-      const viteConfigContent = generateViteConfig()
-      if (!dryRun) {
-        fs.writeFileSync(viteConfigPath, viteConfigContent)
-      }
-      result.filesCreated.push('vite.config.ts')
-      console.log(
-        `  📄 ${viteConfigExists ? 'Overwrote' : 'Created'} vite.config.ts (React Native Web aliasing)`
-      )
-
-      // Add react-native-web to dependencies if not present
-      const pkg = JSON.parse(fs.readFileSync(packagePath2, 'utf-8'))
-      const deps = { ...pkg.dependencies, ...pkg.devDependencies }
-      if (!deps['react-native-web']) {
-        result.dependencies.dev.push('react-native-web@^0.21.2')
-        console.log(
-          `  💡 Note: Add react-native-web to your dependencies for Storybook`
-        )
-      }
-    } else {
-      console.log(
-        `  ⏭️  Skipped vite.config.ts (already exists, use --force to overwrite)`
-      )
-    }
-  }
-
-  // Print dependencies
+  // Print dependencies and notices
   console.log('\n📦 Install these dependencies:\n')
-
-  const installCmd = `npm install -D ${result.dependencies.dev.join(' ')}`
-  console.log(`  ${installCmd}`)
-
+  console.log(`  npm install -D ${result.dependencies.dev.join(' ')}`)
   if (result.dependencies.prod.length > 0) {
     console.log(`  npm install ${result.dependencies.prod.join(' ')}`)
   }
-
   console.log('')
 
-  // Print next steps
+  if (result.dependencies.notices.length > 0) {
+    console.log('⚠️  Notices:')
+    for (const n of result.dependencies.notices) console.log(`  • ${n}`)
+    console.log('')
+  }
+
   console.log('📋 Next steps:\n')
   console.log('  1. Run the install command above')
   console.log('  2. Review .storybook/preview.tsx and customize as needed')
@@ -1022,14 +856,10 @@ export async function runSetup(
       `  3. Ensure your ${framework} theme/config is properly imported in preview.tsx`
     )
   }
-  console.log(
-    `  ${framework !== 'vanilla' ? '4' : '3'}. Run: npm run storybook`
-  )
+  console.log(`  ${framework !== 'vanilla' ? '4' : '3'}. Run: npm run storybook`)
   console.log('')
 
-  if (dryRun) {
-    console.log('ℹ️  Dry run mode - no files were written\n')
-  }
+  if (dryRun) console.log('ℹ️  Dry run mode - no files were written\n')
 
   return result
 }

@@ -107,6 +107,9 @@ function writeConfigFile(
     excludePatterns: config.excludePatterns
   }
 
+  // Only persist isNextjs when true so non-Next.js configs stay clean
+  if (config.isNextjs) persisted.isNextjs = true
+
   // Carry over optional fields only when explicitly set
   if (config.storybookVersion)
     persisted.storybookVersion = config.storybookVersion
@@ -642,57 +645,31 @@ async function autoDetectConfig(rootDir: string): Promise<StorybookMCPConfig> {
     }
   }
 
-  // Detect framework from dependencies
-  const packagePath = path.join(rootDir, 'package.json')
-  if (fs.existsSync(packagePath)) {
-    const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf-8'))
-    const deps = {
-      ...pkg.dependencies,
-      ...pkg.devDependencies
-    }
+  // Detect framework from dependencies + project signals.
+  // Centralised in setup.ts so cli/setup share one source of truth.
+  const { detectFramework, detectNextjs } = await import('./utils/setup.js')
+  const detected = detectFramework(rootDir)
+  const isNextjs = detectNextjs(rootDir)
 
-    if (deps['@chakra-ui/react']) {
-      framework = 'chakra'
-    } else {
-      // shadcn/ui detection — cast a wide net:
-      //   components.json  → definitive shadcn CLI project
-      //   @radix-ui/*      → any Radix primitive (traditional shadcn)
-      //   @base-ui-components/react → Base UI (newer shadcn replacement for Radix)
-      //   class-variance-authority → cva, canonical shadcn pattern
-      //   tailwindcss      → almost always paired with shadcn in React projects
-      //   lucide-react     → the default icon set bundled by shadcn CLI
-      const hasComponentsJson = fs.existsSync(
-        path.join(rootDir, 'components.json')
-      )
-      const hasAnyRadix = Object.keys(deps).some(k =>
-        k.startsWith('@radix-ui/')
-      )
-      if (
-        hasComponentsJson ||
-        hasAnyRadix ||
-        deps['@base-ui-components/react'] ||
-        deps['class-variance-authority'] ||
-        deps['lucide-react'] ||
-        deps.tailwindcss
-      ) {
-        framework = 'shadcn'
-      } else if (deps['tamagui']) {
-        framework = 'tamagui'
-      } else if (deps['@gluestack-ui/themed'] || deps['@gluestack-ui/config']) {
-        framework = 'gluestack'
-      }
-    }
+  // Map setup.ts FrameworkType to StorybookMCPConfig framework union.
+  // (setup.ts FrameworkType doesn't include 'react-native' / 'custom'.)
+  if (detected !== 'vanilla') {
+    framework = detected
+  } else if (isNextjs) {
+    // Vanilla Next.js (no UI lib) — represent as 'nextjs' framework.
+    framework = 'nextjs'
   }
 
   console.error(
-    `[storybook-mcp] Auto-detected ${libraries.length} libraries, framework: ${framework}`
+    `[storybook-mcp] Auto-detected ${libraries.length} libraries, framework: ${framework}${isNextjs ? ' (+ Next.js)' : ''}`
   )
 
   return {
     ...DEFAULT_CONFIG,
     rootDir,
     libraries,
-    framework
+    framework,
+    isNextjs
   } as StorybookMCPConfig
 }
 

@@ -20,8 +20,12 @@ export interface StorybookMCPConfig {
     | 'tamagui'
     | 'gluestack'
     | 'react-native'
+    | 'nextjs'
     | 'vanilla'
     | 'custom'
+
+  /** Whether this project is a Next.js project (independent of UI framework) */
+  isNextjs?: boolean
 
   /** Story file naming convention */
   storyFilePattern: string
@@ -149,6 +153,9 @@ export interface DependencyInfo {
 
   /** Uses React Native */
   usesReactNative: boolean
+
+  /** Uses Next.js APIs (next/image, next/link, next/navigation, next/font, etc.) */
+  usesNextjs?: boolean
 
   /** Uses Emotion */
   usesEmotion: boolean

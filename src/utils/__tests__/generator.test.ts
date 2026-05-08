@@ -129,3 +129,78 @@ describe('generator', () => {
     expect(story.content).toBeTruthy()
   })
 })
+
+describe('generator - Next.js', () => {
+  it('imports Meta/StoryObj from @storybook/nextjs when isNextjs is true', async () => {
+    const config = makeConfig({ isNextjs: true })
+    const story = await generateStory(config, makeAnalysis(), {
+      componentPath: 'src/components/Button.tsx'
+    })
+    expect(story.content).toContain(
+      "import type { Meta, StoryObj } from '@storybook/nextjs'"
+    )
+    expect(story.content).not.toContain(
+      "import type { Meta, StoryObj } from '@storybook/react'"
+    )
+  })
+
+  it("imports from @storybook/nextjs when framework is 'nextjs' (vanilla Next.js)", async () => {
+    const config = makeConfig({ framework: 'nextjs' })
+    const story = await generateStory(config, makeAnalysis(), {
+      componentPath: 'src/components/Button.tsx'
+    })
+    expect(story.content).toContain(
+      "import type { Meta, StoryObj } from '@storybook/nextjs'"
+    )
+  })
+
+  it('does NOT add withRouter decorator for Next.js + router-using component', async () => {
+    const config = makeConfig({ isNextjs: true })
+    const analysis = makeAnalysis({
+      dependencies: {
+        usesRouter: true,
+        usesReactQuery: false,
+        usesChakra: false,
+        usesShadcn: false,
+        usesTamagui: false,
+        usesGluestack: false,
+        usesReactNative: false,
+        usesEmotion: false,
+        usesTailwind: false,
+        usesFramerMotion: false,
+        usesMSW: false,
+        usesGlobalState: false,
+        otherImports: []
+      }
+    })
+    const story = await generateStory(config, analysis, {
+      componentPath: 'src/components/Button.tsx'
+    })
+    expect(story.content).not.toContain('withRouter')
+    expect(story.content).not.toContain('storybook-addon-remix-react-router')
+  })
+
+  it('still adds withRouter decorator for non-Next.js + router-using component', async () => {
+    const analysis = makeAnalysis({
+      dependencies: {
+        usesRouter: true,
+        usesReactQuery: false,
+        usesChakra: false,
+        usesShadcn: false,
+        usesTamagui: false,
+        usesGluestack: false,
+        usesReactNative: false,
+        usesEmotion: false,
+        usesTailwind: false,
+        usesFramerMotion: false,
+        usesMSW: false,
+        usesGlobalState: false,
+        otherImports: []
+      }
+    })
+    const story = await generateStory(makeConfig(), analysis, {
+      componentPath: 'src/components/Button.tsx'
+    })
+    expect(story.content).toContain('withRouter')
+  })
+})

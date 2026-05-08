@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { parseStoryExports, extractStoryBlock, mergeStories } from '../story-merger.js'
+import {
+  parseStoryExports,
+  extractStoryBlock,
+  mergeStories,
+  appendMissingGeneratedStories,
+} from '../story-merger.js'
 
 const GENERATED = `import type { Meta, StoryObj } from '@storybook/react'
 import { Button } from './Button'
@@ -128,5 +133,23 @@ describe('mergeStories', () => {
 
     expect(content).toContain('export const Default: Story')
     expect(content).toContain('export const WithVariant: Story')
+  })
+})
+
+describe('appendMissingGeneratedStories', () => {
+  it('appends generated exports missing from the existing file', () => {
+    const generated = `${GENERATED}\n\nexport const Interactive: Story = {\n  play: async () => {},\n}\n`
+    const existing = `${GENERATED}\n` // missing Interactive
+
+    const result = appendMissingGeneratedStories(generated, existing)
+    expect(result.added).toEqual(['Interactive'])
+    expect(result.content).toContain('export const Interactive: Story')
+    expect(result.content).toContain('Added by storybook-mcp sync')
+  })
+
+  it('does nothing when existing already has all generated exports', () => {
+    const result = appendMissingGeneratedStories(GENERATED, GENERATED)
+    expect(result.added).toEqual([])
+    expect(result.content).toBe(GENERATED)
   })
 })

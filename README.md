@@ -1,108 +1,41 @@
 # forgekit-storybook-mcp
 
-<div align="center">
-
-**⚡ Pro License — ~~$49~~ $29 launch price** | Unlimited sync • All templates • Test & docs generation
-
-[**Get Pro →**](https://buy.polar.sh/polar_cl_Tnd3ryKUJpYPnXF0kBW1KFHQnoLlxAq2cz9GL3Et0dV) · [npm](https://npmjs.com/package/forgekit-storybook-mcp) · [GitHub](https://github.com/effinrich/storybook-mcp-v2)
-
-[![npm version](https://img.shields.io/npm/v/forgekit-storybook-mcp)](https://npmjs.com/package/forgekit-storybook-mcp)
-[![downloads](https://img.shields.io/npm/dm/forgekit-storybook-mcp)](https://npmjs.com/package/forgekit-storybook-mcp)
-
-</div>
-
----
-
-## License & Pricing
-
-**This tool follows a "Free for Basic / Paid for Pro" model.**
-
-### Free Tier
-
-Perfect for individuals and trying out the tool.
-
-- ✅ List and analyze components
-- ✅ Generate basic stories (`basic` template)
-- ✅ **Test generation** (Playwright/Vitest)
-- ✅ **Docs generation** (MDX)
-- ✅ Sync up to 10 components per run
-- ✅ `.env` / `.env.local` license key loading
-- ❌ Advanced templates (`with-msw`, `form`, `with-router`, etc.)
-- ❌ Unlimited sync (beyond 10 components)
-- ❌ `update_story` (smart merge regeneration)
-- ❌ Figma Code Connect generation
-
-### Pro Tier — ~~$49~~ $29 (Launch Price · Lifetime License)
-
-For professional teams requiring complete coverage.
-
-- ✅ **Unlimited** sync (no component cap)
-- ✅ **All** advanced templates (Interactive, MSW, Router, Form, etc.)
-- ✅ **`update_story`** — smart merge regeneration (preserves your custom exports)
-- ✅ **Figma Code Connect** generation
-- ✅ Priority support
-- ✅ Lifetime updates — no subscription
-
-**[👉 Get Pro License](https://buy.polar.sh/polar_cl_Tnd3ryKUJpYPnXF0kBW1KFHQnoLlxAq2cz9GL3Et0dV)**
-
-### Activation
-
-**Option 1: Config file**
-
-Add to `storybook-mcp.config.json`:
-
-```json
-{
-  "licenseKey": "your-polar-license-key"
-}
-```
-
-**Option 2: Environment variable**
-
-```bash
-export STORYBOOK_MCP_LICENSE=your-polar-license-key
-```
-
-License keys are UUID format, issued by Polar.sh when you purchase.
-
----
-
 A **Model Context Protocol (MCP) server** for Storybook story generation, component analysis, and validation.
 
-**Auto-detects** Chakra UI, shadcn/ui, Tamagui, and Gluestack UI. Works with any React project — unrecognized frameworks use vanilla defaults.
+**Auto-detects** Next.js, Chakra UI, shadcn/ui, Tamagui, and Gluestack UI. Works with any React project — unrecognized frameworks use vanilla defaults.
 
 ---
 
-## 🎉 What's New in v0.12
+## 🎉 What's New in v1.2
 
-### 🔑 License detection overhaul
-- **`.env` / `.env.local` support** — `STORYBOOK_MCP_LICENSE` is now loaded automatically from the project root, no shell export required. `.env.local` takes priority over `.env`; both are overridden by a system env var or MCP client config.
-- **`--reset-license` flag** — clears the 24-hour Polar API cache and forces a fresh validation. Essential escape hatch when a key was previously rejected due to a network hiccup.
-- **Actionable error messages** — validation failures now log the exact reason (HTTP status, `status=revoked`, `expired`, network timeout) instead of a silent fallback to Free tier.
-- **Fixed `console.log` stdout corruption** — success message was writing to stdout (the MCP JSON-RPC channel), which could silently break tool responses. Moved to `console.error`.
+### ▲ Next.js support — first-class
 
-### 📦 Tests & Docs unlocked for Free tier
-- `generate_test`, `generate_docs`, and `sync_all` with tests/docs now work without a Pro license.
-- Pro retains: unlimited sync, all advanced templates, `update_story`, and Figma Code Connect.
+- **Auto-detects Next.js projects** when `next` is in dependencies *and* a `next.config.{js,ts,mjs,cjs}` exists at the project root. Both signals must be present (avoids false positives from transitive `next` deps).
+- **Scaffolds with `@storybook/nextjs`** — the official Storybook framework package — instead of `@storybook/react-vite`. Stories type-check against the Next.js framework's `StorybookConfig`, with `next/image`, `next/link`, `next/font`, and `next/navigation` working out of the box.
+- **Generated stories import from `@storybook/nextjs`** — `import type { Meta, StoryObj } from '@storybook/nextjs'` for Next.js projects, `'@storybook/react'` for everything else.
+- **No more `withRouter` decorator on Next.js stories** — `@storybook/nextjs` ships built-in mocks for `next/navigation` / `next/router` wired through `parameters.nextjs.appDirectory: true` in the generated `preview.tsx`.
+- **UI lib + Next.js compose correctly** — Next.js + Chakra still emits `<ChakraProvider>` decorators in `preview.tsx`; Next.js wins the framework-package decision but the UI lib still drives the providers.
+- New `isNextjs` field on `storybook-mcp.config.json` (persisted only when `true`).
+- New `validator.ts` accepts `@storybook/react`, `@storybook/react-vite`, **and** `@storybook/nextjs` as valid Meta/StoryObj import sources.
 
-### 🗂 Config file auto-generation
-- **`storybook-mcp.config.json` is now created automatically** on first run if it doesn't exist — populated with auto-detected framework and library paths.
-- `--setup` always writes/refreshes the config file after bootstrapping `.storybook/`.
-- Existing `package.json#storybook-mcp` configs are **migrated** to the standalone file automatically.
+### 🛠 Setup overhaul
 
-### 👁 Background file watching
-- **Live sync** — the server now watches all configured library directories with `fs.watch({ recursive })` and re-syncs any changed component within 500 ms (debounced).
-- **Periodic catch-up rescan** every 30 seconds covers events missed by `fs.watch` (Linux kernel limitations, network drives, bulk renames).
-- New `--no-watch` flag to disable watching (useful in CI or `--init-only` pipelines).
-- Clean shutdown on `SIGINT` / `SIGTERM` — watchers and timers are always closed.
+- **Detected Storybook version is honored** — `runSetup` now reads the installed `storybook` version (from `node_modules` first, falling back to the `package.json` declared range) and pins all `@storybook/*` deps to that exact range. Older v9-and-below installs emit an upgrade `notice` instead of silently downgrading.
+- **`@nx/storybook` peerDependency detection** — falls back to the Storybook version declared by Nx's plugin when no direct install is present.
+- **Stricter detection contract** — exported `detectInstalledStorybookVersion()`, `detectNxStorybookVersion()`, and `detectNextjs()` for programmatic consumers.
+- **`addons` are emitted explicitly** — `@storybook/addon-docs` and `@storybook/addon-a11y` now show up in `main.ts` for v10 (essentials/interactions are still bundled into the main `storybook` package).
+- **shadcn detection casts a wider net** — matches on `components.json`, any `@radix-ui/*`, `@base-ui-components/react`, `class-variance-authority`, `tailwindcss`, *or* `lucide-react`.
+- **Single source of truth** — `cli.ts` and `setup.ts` no longer duplicate framework detection; `cli.ts` now imports from `setup.ts`.
 
-### ⚡ Performance & reliability
-- **Concurrent sync** — components are processed in parallel batches of 5, making large repos significantly faster on startup.
-- **Atomic cache writes** — cache file is written to `.tmp` then renamed, preventing corruption on crash or kill signal.
-- **Stale cache pruning** — deleted components are removed from the hash cache automatically.
-- **`syncSingleComponent` deep copy fix** — shallow `{ ...cache }` was sharing inner object references, allowing mutations to corrupt the old cache state.
+### ✅ Sync stays the final task
 
-**Upgrading from 0.11.x?** Run `npm install forgekit-storybook-mcp@latest`. No breaking changes. See [CHANGELOG](./CHANGELOG.md) for full details.
+- `sync_all` continues to be the orchestrator that scans, generates, and tops up. Existing stories that lack interaction tests are *non-destructively* augmented by `appendMissingGeneratedStories` — your custom exports are preserved, missing template exports (Variants, Sizes, **Interactive play stories**) are appended.
+
+### 🐛 Fixes
+
+- TypeScript no longer errors on `NON_COMPONENT_FILES.includes(...)` — the `as const` array's narrowed type was rejecting arbitrary strings.
+
+**Upgrading?** Run `npm install forgekit-storybook-mcp@latest` and `npx forgekit-storybook-mcp --setup --force` to refresh `.storybook/main.ts` if you want to opt into the Next.js framework package. No breaking changes for existing non-Next.js setups. See [CHANGELOG](./CHANGELOG.md) for full details.
 
 ---
 
