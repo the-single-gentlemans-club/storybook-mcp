@@ -220,13 +220,23 @@ function validateImports(
   warnings: ValidationIssue[],
   suggestions: ValidationIssue[]
 ): void {
-  // Check for proper Storybook imports
-  if (!source.includes("from '@storybook/react'") && !source.includes('from "@storybook/react"')) {
+  // Check for proper Storybook imports — accept any of the official framework
+  // type packages: @storybook/react, @storybook/react-vite, @storybook/nextjs.
+  const validImportSources = [
+    '@storybook/react',
+    '@storybook/react-vite',
+    '@storybook/nextjs'
+  ]
+  const hasValidImport = validImportSources.some(
+    src => source.includes(`from '${src}'`) || source.includes(`from "${src}"`)
+  )
+  if (!hasValidImport) {
     errors.push({
       type: 'error',
       code: 'MISSING_STORYBOOK_IMPORT',
-      message: 'Must import Meta and StoryObj from @storybook/react',
-      fix: "Add: import type { Meta, StoryObj } from '@storybook/react'",
+      message:
+        'Must import Meta and StoryObj from @storybook/react or @storybook/nextjs',
+      fix: "Add: import type { Meta, StoryObj } from '@storybook/react' (or '@storybook/nextjs' for Next.js)",
     })
   }
 

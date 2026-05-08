@@ -2,27 +2,25 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
-import { generateCodeConnect, writeCodeConnectFile } from '../code-connect-generator.js'
-import type { ComponentAnalysis, StorybookMCPConfig } from '../../types.js'
-import { DEFAULT_CONFIG } from '../../types.js'
+import {
+  generateCodeConnect,
+  writeCodeConnectFile
+} from '../code-connect-generator.js'
+import type { ComponentAnalysis } from '../../types.js'
 
 // Minimal config for tests
-const config: StorybookMCPConfig = {
-  ...DEFAULT_CONFIG,
-  rootDir: '/project',
-  libraries: [],
-  framework: 'vanilla',
-  storyFilePattern: DEFAULT_CONFIG.storyFilePattern!,
-  componentPatterns: DEFAULT_CONFIG.componentPatterns!,
-  excludePatterns: DEFAULT_CONFIG.excludePatterns!
-}
+const config = { rootDir: '/project', libraries: [] } as unknown as Parameters<
+  typeof writeCodeConnectFile
+>[0]
 
 // Factory for minimal ComponentAnalysis
-function makeAnalysis(overrides: Partial<ComponentAnalysis> = {}): ComponentAnalysis {
+function makeAnalysis(
+  overrides: Partial<ComponentAnalysis> = {}
+): ComponentAnalysis {
   return {
     name: 'Button',
     filePath: 'src/components/Button.tsx',
-    library: 'components',
+    library: 'ui',
     hasStory: false,
     exportType: 'default',
     props: [],
@@ -39,17 +37,20 @@ function makeAnalysis(overrides: Partial<ComponentAnalysis> = {}): ComponentAnal
       usesFramerMotion: false,
       usesMSW: false,
       usesGlobalState: false,
-      otherImports: [],
+      otherImports: []
     },
     suggestions: [],
     sourcePreview: '',
-    ...overrides,
+    ...overrides
   }
 }
 
 describe('generateCodeConnect', () => {
   it('generates a figma.connect call with the component name', async () => {
-    const analysis = makeAnalysis({ name: 'Button', filePath: 'src/components/Button.tsx' })
+    const analysis = makeAnalysis({
+      name: 'Button',
+      filePath: 'src/components/Button.tsx'
+    })
     const result = await generateCodeConnect(config, analysis)
     expect(result.content).toContain('figma.connect(Button,')
   })
@@ -71,24 +72,36 @@ describe('generateCodeConnect', () => {
   it('imports @figma/code-connect/react', async () => {
     const analysis = makeAnalysis()
     const result = await generateCodeConnect(config, analysis)
-    expect(result.content).toContain("import figma from '@figma/code-connect/react'")
+    expect(result.content).toContain(
+      "import figma from '@figma/code-connect/react'"
+    )
   })
 
   it('imports the component from the same directory', async () => {
-    const analysis = makeAnalysis({ name: 'Button', filePath: 'src/components/Button.tsx' })
+    const analysis = makeAnalysis({
+      name: 'Button',
+      filePath: 'src/components/Button.tsx'
+    })
     const result = await generateCodeConnect(config, analysis)
     expect(result.content).toContain("import { Button } from './Button'")
   })
 
   it('output filePath is <componentDir>/<ComponentName>.figma.tsx', async () => {
-    const analysis = makeAnalysis({ name: 'Button', filePath: 'src/components/Button.tsx' })
+    const analysis = makeAnalysis({
+      name: 'Button',
+      filePath: 'src/components/Button.tsx'
+    })
     const result = await generateCodeConnect(config, analysis)
-    expect(result.filePath).toBe(path.join('src/components', 'Button.figma.tsx'))
+    expect(result.filePath).toBe(
+      path.join('src/components', 'Button.figma.tsx')
+    )
   })
 
   it('maps string prop to figma.string()', async () => {
     const analysis = makeAnalysis({
-      props: [{ name: 'label', type: 'string', required: true, controlType: 'text' }],
+      props: [
+        { name: 'label', type: 'string', required: true, controlType: 'text' }
+      ]
     })
     const result = await generateCodeConnect(config, analysis)
     expect(result.content).toContain("figma.string('Label')")
@@ -96,7 +109,14 @@ describe('generateCodeConnect', () => {
 
   it('maps boolean prop to figma.boolean()', async () => {
     const analysis = makeAnalysis({
-      props: [{ name: 'disabled', type: 'boolean', required: false, controlType: 'boolean' }],
+      props: [
+        {
+          name: 'disabled',
+          type: 'boolean',
+          required: false,
+          controlType: 'boolean'
+        }
+      ]
     })
     const result = await generateCodeConnect(config, analysis)
     expect(result.content).toContain("figma.boolean('Disabled')")
@@ -110,9 +130,9 @@ describe('generateCodeConnect', () => {
           type: "'primary' | 'secondary' | 'ghost'",
           required: false,
           controlType: 'select',
-          controlOptions: ['primary', 'secondary', 'ghost'],
-        },
-      ],
+          controlOptions: ['primary', 'secondary', 'ghost']
+        }
+      ]
     })
     const result = await generateCodeConnect(config, analysis)
     expect(result.content).toContain("figma.enum('Variant'")
@@ -127,9 +147,9 @@ describe('generateCodeConnect', () => {
         {
           name: 'size',
           type: "'sm' | 'md' | 'lg'",
-          required: false,
-        },
-      ],
+          required: false
+        }
+      ]
     })
     const result = await generateCodeConnect(config, analysis)
     expect(result.content).toContain("figma.enum('Size'")
@@ -140,7 +160,7 @@ describe('generateCodeConnect', () => {
 
   it('maps children prop (ReactNode) to figma.children()', async () => {
     const analysis = makeAnalysis({
-      props: [{ name: 'children', type: 'ReactNode', required: false }],
+      props: [{ name: 'children', type: 'ReactNode', required: false }]
     })
     const result = await generateCodeConnect(config, analysis)
     expect(result.content).toContain("figma.children(['*'])")
@@ -148,7 +168,7 @@ describe('generateCodeConnect', () => {
 
   it('maps children prop by name regardless of type', async () => {
     const analysis = makeAnalysis({
-      props: [{ name: 'children', type: 'React.ReactNode', required: false }],
+      props: [{ name: 'children', type: 'React.ReactNode', required: false }]
     })
     const result = await generateCodeConnect(config, analysis)
     expect(result.content).toContain("figma.children(['*'])")
@@ -158,8 +178,8 @@ describe('generateCodeConnect', () => {
     const analysis = makeAnalysis({
       props: [
         { name: 'onClick', type: '() => void', required: false },
-        { name: 'label', type: 'string', required: true },
-      ],
+        { name: 'label', type: 'string', required: true }
+      ]
     })
     const result = await generateCodeConnect(config, analysis)
     expect(result.content).not.toContain('onClick')
@@ -172,8 +192,8 @@ describe('generateCodeConnect', () => {
         { name: 'className', type: 'string', required: false },
         { name: 'style', type: 'CSSProperties', required: false },
         { name: 'ref', type: 'Ref<HTMLButtonElement>', required: false },
-        { name: 'label', type: 'string', required: true },
-      ],
+        { name: 'label', type: 'string', required: true }
+      ]
     })
     const result = await generateCodeConnect(config, analysis)
     expect(result.content).not.toContain('className')
@@ -185,7 +205,7 @@ describe('generateCodeConnect', () => {
   it('generates self-closing JSX for component without children', async () => {
     const analysis = makeAnalysis({
       name: 'Button',
-      props: [{ name: 'label', type: 'string', required: true }],
+      props: [{ name: 'label', type: 'string', required: true }]
     })
     const result = await generateCodeConnect(config, analysis)
     expect(result.content).toContain('<Button')
@@ -197,7 +217,7 @@ describe('generateCodeConnect', () => {
     const analysis = makeAnalysis({
       name: 'Card',
       filePath: 'src/components/Card.tsx',
-      props: [{ name: 'children', type: 'ReactNode', required: false }],
+      props: [{ name: 'children', type: 'ReactNode', required: false }]
     })
     const result = await generateCodeConnect(config, analysis)
     expect(result.content).toContain('<Card')
@@ -206,17 +226,30 @@ describe('generateCodeConnect', () => {
 
   it('converts camelCase prop name to PascalCase for Figma display', async () => {
     const analysis = makeAnalysis({
-      props: [{ name: 'isLoading', type: 'boolean', required: false, controlType: 'boolean' }],
+      props: [
+        {
+          name: 'isLoading',
+          type: 'boolean',
+          required: false,
+          controlType: 'boolean'
+        }
+      ]
     })
     const result = await generateCodeConnect(config, analysis)
     expect(result.content).toContain("figma.boolean('IsLoading')")
   })
 
   it('handles component with no props (empty props array)', async () => {
-    const analysis = makeAnalysis({ name: 'Spinner', filePath: 'src/components/Spinner.tsx', props: [] })
+    const analysis = makeAnalysis({
+      name: 'Spinner',
+      filePath: 'src/components/Spinner.tsx',
+      props: []
+    })
     const result = await generateCodeConnect(config, analysis)
     expect(result.content).toContain('figma.connect(Spinner,')
-    expect(result.filePath).toBe(path.join('src/components', 'Spinner.figma.tsx'))
+    expect(result.filePath).toBe(
+      path.join('src/components', 'Spinner.figma.tsx')
+    )
   })
 })
 
@@ -232,15 +265,10 @@ describe('writeCodeConnectFile', () => {
   })
 
   it('writes the file to disk', async () => {
-    const tmpConfig: StorybookMCPConfig = {
-      ...DEFAULT_CONFIG,
+    const tmpConfig = {
       rootDir: tmpDir,
-      libraries: [],
-      framework: 'vanilla',
-      storyFilePattern: DEFAULT_CONFIG.storyFilePattern!,
-      componentPatterns: DEFAULT_CONFIG.componentPatterns!,
-      excludePatterns: DEFAULT_CONFIG.excludePatterns!
-    }
+      libraries: []
+    } as unknown as Parameters<typeof writeCodeConnectFile>[0]
     const cc = { content: 'hello figma', filePath: 'src/Button.figma.tsx' }
     const written = await writeCodeConnectFile(tmpConfig, cc)
     expect(written).toBe(true)
@@ -250,56 +278,51 @@ describe('writeCodeConnectFile', () => {
   })
 
   it('does not overwrite existing file when overwrite=false', async () => {
-    const tmpConfig: StorybookMCPConfig = {
-      ...DEFAULT_CONFIG,
+    const tmpConfig = {
       rootDir: tmpDir,
-      libraries: [],
-      framework: 'vanilla',
-      storyFilePattern: DEFAULT_CONFIG.storyFilePattern!,
-      componentPatterns: DEFAULT_CONFIG.componentPatterns!,
-      excludePatterns: DEFAULT_CONFIG.excludePatterns!
-    }
+      libraries: []
+    } as unknown as Parameters<typeof writeCodeConnectFile>[0]
     const filePath = 'src/Button.figma.tsx'
     const fullPath = path.join(tmpDir, filePath)
     fs.mkdirSync(path.dirname(fullPath), { recursive: true })
     fs.writeFileSync(fullPath, 'original content')
 
-    const written = await writeCodeConnectFile(tmpConfig, { content: 'new content', filePath })
+    const written = await writeCodeConnectFile(tmpConfig, {
+      content: 'new content',
+      filePath
+    })
     expect(written).toBe(false)
     expect(fs.readFileSync(fullPath, 'utf-8')).toBe('original content')
   })
 
   it('overwrites existing file when overwrite=true', async () => {
-    const tmpConfig: StorybookMCPConfig = {
-      ...DEFAULT_CONFIG,
+    const tmpConfig = {
       rootDir: tmpDir,
-      libraries: [],
-      framework: 'vanilla',
-      storyFilePattern: DEFAULT_CONFIG.storyFilePattern!,
-      componentPatterns: DEFAULT_CONFIG.componentPatterns!,
-      excludePatterns: DEFAULT_CONFIG.excludePatterns!
-    }
+      libraries: []
+    } as unknown as Parameters<typeof writeCodeConnectFile>[0]
     const filePath = 'src/Button.figma.tsx'
     const fullPath = path.join(tmpDir, filePath)
     fs.mkdirSync(path.dirname(fullPath), { recursive: true })
     fs.writeFileSync(fullPath, 'original content')
 
-    const written = await writeCodeConnectFile(tmpConfig, { content: 'new content', filePath }, true)
+    const written = await writeCodeConnectFile(
+      tmpConfig,
+      { content: 'new content', filePath },
+      true
+    )
     expect(written).toBe(true)
     expect(fs.readFileSync(fullPath, 'utf-8')).toBe('new content')
   })
 
   it('creates intermediate directories if needed', async () => {
-    const tmpConfig: StorybookMCPConfig = {
-      ...DEFAULT_CONFIG,
+    const tmpConfig = {
       rootDir: tmpDir,
-      libraries: [],
-      framework: 'vanilla',
-      storyFilePattern: DEFAULT_CONFIG.storyFilePattern!,
-      componentPatterns: DEFAULT_CONFIG.componentPatterns!,
-      excludePatterns: DEFAULT_CONFIG.excludePatterns!
+      libraries: []
+    } as unknown as Parameters<typeof writeCodeConnectFile>[0]
+    const cc = {
+      content: 'test',
+      filePath: 'deep/nested/dir/Component.figma.tsx'
     }
-    const cc = { content: 'test', filePath: 'deep/nested/dir/Component.figma.tsx' }
     const written = await writeCodeConnectFile(tmpConfig, cc)
     expect(written).toBe(true)
     expect(fs.existsSync(path.join(tmpDir, cc.filePath))).toBe(true)

@@ -87,8 +87,11 @@ export async function generateStory(
 
   const library = config.libraries.find(l => l.name === analysis.library)
   const storyTitle = buildStoryTitle(library?.storyTitlePrefix, analysis.name)
-  const imports = buildImports(analysis, config.framework, options)
-  const decorators = buildDecorators(analysis, library?.decorators, options)
+  const isNextjs = config.isNextjs || config.framework === 'nextjs'
+  const imports = buildImports(analysis, config, options)
+  const decorators = buildDecorators(analysis, library?.decorators, options, {
+    isNextjs
+  })
   const argTypes = buildArgTypes(analysis.props)
   const defaultArgs = buildDefaultArgs(analysis.props)
 
@@ -196,15 +199,36 @@ function buildStoryTitle(
 }
 
 /**
+ * Decide which Storybook framework type-package to import `Meta`/`StoryObj` from.
+ * For Next.js projects we use `@storybook/nextjs` so stories type-check against
+ * the Next.js framework's StorybookConfig (next/image, next/link, etc. are
+ * supported there). For everything else we use the framework-agnostic
+ * `@storybook/react` re-export, which is identical to `@storybook/react-vite`
+ * for type purposes and is what the existing test fixtures expect.
+ */
+function getStorybookTypeSource(
+  config: Pick<StorybookMCPConfig, 'isNextjs' | 'framework'>
+): string {
+  if (config.isNextjs || config.framework === 'nextjs') {
+    return '@storybook/nextjs'
+  }
+  return '@storybook/react'
+}
+
+/**
  * Build import statements
  */
 function buildImports(
   analysis: ComponentAnalysis,
-  framework: StorybookMCPConfig['framework'],
+  config: Pick<StorybookMCPConfig, 'framework' | 'isNextjs'>,
   options: StoryGenerationOptions
 ): string[] {
+  const { framework } = config
+  const typeSource = getStorybookTypeSource(config)
+  const isNextjs = config.isNextjs || framework === 'nextjs'
+
   const imports: string[] = [
-    `import type { Meta, StoryObj } from '@storybook/react'`
+    `import type { Meta, StoryObj } from '${typeSource}'`
   ]
 
   // Add test utilities if interactive (only for web)
@@ -229,8 +253,11 @@ function buildImports(
     imports.push(`import { ${analysis.name} } from '${importPath}'`)
   }
 
-  // Add router decorator if needed
-  if (analysis.dependencies.usesRouter) {
+  // Add router decorator if needed.
+  // Next.js projects rely on @storybook/nextjs's built-in next/navigation mocks
+  // (configured via parameters.nextjs.appDirectory in preview), so we don't add
+  // a `withRouter` decorator there.
+  if (analysis.dependencies.usesRouter && !isNextjs) {
     imports.push(
       `import { withRouter } from 'storybook-addon-remix-react-router'`
     )
@@ -264,7 +291,8 @@ function buildImports(
 function buildDecorators(
   analysis: ComponentAnalysis,
   libraryDecorators: string[] | undefined,
-  options: StoryGenerationOptions
+  options: StoryGenerationOptions,
+  context: { isNextjs: boolean } = { isNextjs: false }
 ): string[] {
   const decorators: string[] = []
 
@@ -276,7 +304,10 @@ function buildDecorators(
     decorators.push(...options.decorators)
   }
 
-  if (analysis.dependencies.usesRouter) {
+  // Skip the remix-react-router withRouter decorator for Next.js projects —
+  // @storybook/nextjs ships its own mocks for next/navigation and next/router,
+  // wired up via parameters.nextjs in .storybook/preview.tsx.
+  if (analysis.dependencies.usesRouter && !context.isNextjs) {
     decorators.push('withRouter')
   }
 

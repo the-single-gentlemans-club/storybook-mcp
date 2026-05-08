@@ -18,6 +18,7 @@ import { CACHE, FILE_EXTENSIONS } from './constants.js'
 import { generateStory, writeStoryFile } from './generator.js'
 import { generateTest, writeTestFile } from './test-generator.js'
 import { generateDocs, writeDocsFile } from './docs-generator.js'
+import { appendMissingGeneratedStories } from './story-merger.js'
 
 // Max components processed concurrently (avoids memory spikes on large repos)
 const CONCURRENCY_LIMIT = 5
@@ -133,7 +134,7 @@ function hashFile(filePath: string): string {
  * Prevents ghost entries from accumulating over time.
  */
 function pruneStaleCache(
-  rootDir: string,
+  _rootDir: string,
   cache: HashCache,
   scannedPaths: Set<string>
 ): void {
@@ -177,7 +178,8 @@ function fileExists(rootDir: string, relativePath: string): boolean {
 function extractStoryExports(storyContent: string): string[] {
   const pattern = /export const (\w+):\s*Story/g
   const names: string[] = []
-  let match: RegExpExecArray | null
+  let match: RegExpExecArray | null = null
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex exec loop
   while ((match = pattern.exec(storyContent)) !== null) {
     names.push(match[1])
   }
@@ -484,6 +486,43 @@ async function syncComponent(
         action: 'updated',
         path: storyPath,
         reason: 'component changed'
+      }
+    } else if (updateExisting) {
+      // Story exists and component did not change — but we may be able to
+      // "top up" older story files with newly-generated exports (variants,
+      // interactive play stories, etc.) without overwriting existing exports.
+      const storyFullPath = path.join(config.rootDir, storyPath)
+      const existingContent = fs.existsSync(storyFullPath)
+        ? fs.readFileSync(storyFullPath, 'utf-8')
+        : ''
+
+      const componentAnalysis = await getAnalysis()
+      const generated = await generateStory(config, componentAnalysis, {
+        componentPath: component.filePath,
+        includeVariants: true,
+        includeInteractive: true,
+        // Do NOT overwrite; we only use this as a source of missing blocks.
+        overwrite: false
+      })
+
+      const appended = appendMissingGeneratedStories(
+        generated.content,
+        existingContent
+      )
+
+      availableStoryExports = extractStoryExports(appended.content)
+
+      if (appended.added.length > 0) {
+        if (!dryRun) {
+          fs.writeFileSync(storyFullPath, appended.content, 'utf-8')
+        }
+        result.story = {
+          action: 'updated',
+          path: storyPath,
+          reason: `added missing stories: ${appended.added.join(', ')}`
+        }
+      } else {
+        result.story = { action: 'unchanged', path: storyPath }
       }
     } else {
       // Story unchanged — read existing file to learn what exports it has

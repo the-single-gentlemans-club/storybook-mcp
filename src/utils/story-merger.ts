@@ -13,8 +13,9 @@ const EXPORT_STORY_RE = /^export const (\w+):\s*Story\b/gm
  */
 export function parseStoryExports(source: string): string[] {
   const names: string[] = []
-  let match: RegExpExecArray | null
+  let match: RegExpExecArray | null = null
   const re = new RegExp(EXPORT_STORY_RE.source, 'gm')
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex exec loop
   while ((match = re.exec(source)) !== null) {
     names.push(match[1])
   }
@@ -93,4 +94,47 @@ export function mergeStories(
     preserved: userAdded,
     removed: [],
   }
+}
+
+export interface AppendMissingResult {
+  /** Final story content (either original existing, or augmented) */
+  content: string
+  /** Story export names that were added from the generated template */
+  added: string[]
+}
+
+/**
+ * Append missing generated story exports into an existing story file, without
+ * overwriting any existing story exports.
+ *
+ * This is useful for "topping up" older story files that only contain a subset
+ * of the stories we now generate (variants, play tests, etc.).
+ */
+export function appendMissingGeneratedStories(
+  generated: string,
+  existing: string
+): AppendMissingResult {
+  const generatedExports = parseStoryExports(generated)
+  const existingExports = parseStoryExports(existing)
+
+  const missing = generatedExports.filter(name => !existingExports.includes(name))
+  if (missing.length === 0) {
+    return { content: existing, added: [] }
+  }
+
+  const blocks: string[] = []
+  for (const name of missing) {
+    const block = extractStoryBlock(generated, name)
+    if (block) blocks.push(block)
+  }
+
+  if (blocks.length === 0) {
+    return { content: existing, added: [] }
+  }
+
+  const separator =
+    '\n// ─── Added by storybook-mcp sync (missing generated stories) ───────────────\n\n'
+  const augmented = existing.trimEnd() + '\n' + separator + blocks.join('\n') + '\n'
+
+  return { content: augmented, added: missing }
 }

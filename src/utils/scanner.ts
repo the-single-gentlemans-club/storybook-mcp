@@ -143,8 +143,7 @@ function extractComponentName(filePath: string): string | null {
   }
 
   // Skip common non-component files
-  const lower = basename.toLowerCase()
-  if ((NON_COMPONENT_FILES as readonly string[]).includes(lower)) {
+  if ((NON_COMPONENT_FILES as readonly string[]).includes(basename.toLowerCase())) {
     return null
   }
 
@@ -433,6 +432,9 @@ function analyzeDependencies(source: string): DependencyInfo {
     usesTamagui: importsFrom(source, ['tamagui', '@tamagui']),
     usesGluestack: importsFrom(source, ['@gluestack-ui']),
     usesReactNative: importsFrom(source, ['react-native', 'expo-']),
+    // 'next' matches both `from 'next'` and `from 'next/image'` etc. via the
+    // subpath rule in importsFrom (next followed by quote, slash, or end).
+    usesNextjs: importsFrom(source, ['next']),
     usesEmotion: importsFrom(source, ['@emotion']),
     // Simplified Tailwind detection - check for common utility classes
     usesTailwind:

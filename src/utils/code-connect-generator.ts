@@ -6,7 +6,11 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import type { StorybookMCPConfig, ComponentAnalysis, PropDefinition } from '../types.js'
+import type {
+  StorybookMCPConfig,
+  ComponentAnalysis,
+  PropDefinition
+} from '../types.js'
 
 export interface GeneratedCodeConnect {
   /** File content for the .figma.tsx Code Connect file */
@@ -69,7 +73,18 @@ function parseUnionOptions(type: string): string[] {
   return type
     .split('|')
     .map(t => t.trim().replace(/^['"]|['"]$/g, ''))
-    .filter(t => t.length > 0 && !['undefined', 'null', 'ReactNode', 'string', 'number', 'boolean'].includes(t))
+    .filter(
+      t =>
+        t.length > 0 &&
+        ![
+          'undefined',
+          'null',
+          'ReactNode',
+          'string',
+          'number',
+          'boolean'
+        ].includes(t)
+    )
 }
 
 /** Convert camelCase or snake_case to PascalCase for Figma display names */
@@ -104,7 +119,8 @@ export async function generateCodeConnect(
   const connectProps = props.filter(p => {
     // Skip internal/callback-only props
     if (p.name.startsWith('on') && p.type.includes('=>')) return false
-    if (p.name === 'className' || p.name === 'style' || p.name === 'ref') return false
+    if (p.name === 'className' || p.name === 'style' || p.name === 'ref')
+      return false
     return true
   })
 
@@ -116,7 +132,8 @@ export async function generateCodeConnect(
 
   // Build example function args
   const argNames = connectProps.map(p => p.name)
-  const argsDestructure = argNames.length > 0 ? `{ ${argNames.join(', ')} }` : '_'
+  const argsDestructure =
+    argNames.length > 0 ? `{ ${argNames.join(', ')} }` : '_'
 
   // Build JSX for the example
   const jsxProps = connectProps
