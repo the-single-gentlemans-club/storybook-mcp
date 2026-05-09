@@ -69,7 +69,7 @@
           },
           {
             "group": "Reference",
-            "pages": ["changelog"]
+            "pages": ["changelog", "package-lineage"]
           }
         ]
       },

@@ -7,3 +7,5 @@
 ## Learned Workspace Facts
 
 - This workspace is the MIT `forgekit-storybook-mcp` package (often called storybook-mcp-v2): a standalone Storybook MCP server and CLI targeting consumer repos, distinct from ForgeKit-wide monorepo generator repos.
+
+- A **private** copy also lives under [`effinrich/forgekit`](https://github.com/effinrich/forgekit) `packages/storybook-mcp` for workspace linking only; releases always come from **this** repo / npm. See [docs/package-lineage.mdx](./docs/package-lineage.mdx).

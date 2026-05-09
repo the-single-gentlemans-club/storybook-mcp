@@ -208,6 +208,89 @@ describe('setup - config generation', () => {
     expect(pkg.scripts['build-storybook']).toBe('storybook build')
     expect(result.scriptsAdded).toContain('storybook')
   })
+
+  it('renames legacy preview.ts to preview.ts.bak with --force, writes preview.tsx', async () => {
+    const dir = path.join(tmpDir, 'legacy-preview-ts')
+    fs.mkdirSync(path.join(dir, '.storybook'), { recursive: true })
+    fs.writeFileSync(
+      path.join(dir, 'package.json'),
+      JSON.stringify({ scripts: {} })
+    )
+    const legacyContent = '// stale preview.ts from older setup\nexport default {}\n'
+    fs.writeFileSync(path.join(dir, '.storybook', 'preview.ts'), legacyContent)
+
+    const result = await runSetup(dir, { force: true })
+
+    expect(fs.existsSync(path.join(dir, '.storybook', 'preview.ts'))).toBe(false)
+    expect(fs.existsSync(path.join(dir, '.storybook', 'preview.ts.bak'))).toBe(true)
+    expect(fs.existsSync(path.join(dir, '.storybook', 'preview.tsx'))).toBe(true)
+    expect(
+      fs.readFileSync(path.join(dir, '.storybook', 'preview.ts.bak'), 'utf-8')
+    ).toBe(legacyContent)
+    expect(result.filesRenamed).toContain(
+      '.storybook/preview.ts → .storybook/preview.ts.bak'
+    )
+    expect(result.filesCreated).toContain('.storybook/preview.tsx')
+  })
+
+  it('renames legacy preview.js to preview.js.bak with --force', async () => {
+    const dir = path.join(tmpDir, 'legacy-preview-js')
+    fs.mkdirSync(path.join(dir, '.storybook'), { recursive: true })
+    fs.writeFileSync(
+      path.join(dir, 'package.json'),
+      JSON.stringify({ scripts: {} })
+    )
+    fs.writeFileSync(
+      path.join(dir, '.storybook', 'preview.js'),
+      '// legacy js preview\n'
+    )
+
+    const result = await runSetup(dir, { force: true })
+
+    expect(fs.existsSync(path.join(dir, '.storybook', 'preview.js'))).toBe(false)
+    expect(fs.existsSync(path.join(dir, '.storybook', 'preview.js.bak'))).toBe(true)
+    expect(fs.existsSync(path.join(dir, '.storybook', 'preview.tsx'))).toBe(true)
+    expect(result.filesRenamed).toContain(
+      '.storybook/preview.js → .storybook/preview.js.bak'
+    )
+  })
+
+  it('does NOT write preview.tsx when legacy preview.ts exists and --force is not set', async () => {
+    const dir = path.join(tmpDir, 'legacy-preview-skip')
+    fs.mkdirSync(path.join(dir, '.storybook'), { recursive: true })
+    fs.writeFileSync(
+      path.join(dir, 'package.json'),
+      JSON.stringify({ scripts: {} })
+    )
+    const legacyContent = '// existing user preview\nexport default {}\n'
+    fs.writeFileSync(path.join(dir, '.storybook', 'preview.ts'), legacyContent)
+
+    const result = await runSetup(dir, { force: false })
+
+    expect(fs.existsSync(path.join(dir, '.storybook', 'preview.ts'))).toBe(true)
+    expect(fs.existsSync(path.join(dir, '.storybook', 'preview.tsx'))).toBe(false)
+    expect(
+      fs.readFileSync(path.join(dir, '.storybook', 'preview.ts'), 'utf-8')
+    ).toBe(legacyContent)
+    expect(result.filesCreated).not.toContain('.storybook/preview.tsx')
+    expect(result.filesRenamed).toEqual([])
+  })
+
+  it('dryRun does not rename or write files even when legacy preview.ts exists', async () => {
+    const dir = path.join(tmpDir, 'legacy-preview-dry')
+    fs.mkdirSync(path.join(dir, '.storybook'), { recursive: true })
+    fs.writeFileSync(
+      path.join(dir, 'package.json'),
+      JSON.stringify({ scripts: {} })
+    )
+    fs.writeFileSync(path.join(dir, '.storybook', 'preview.ts'), '// dry\n')
+
+    await runSetup(dir, { force: true, dryRun: true })
+
+    expect(fs.existsSync(path.join(dir, '.storybook', 'preview.ts'))).toBe(true)
+    expect(fs.existsSync(path.join(dir, '.storybook', 'preview.ts.bak'))).toBe(false)
+    expect(fs.existsSync(path.join(dir, '.storybook', 'preview.tsx'))).toBe(false)
+  })
 })
 
 describe('setup - Next.js detection', () => {

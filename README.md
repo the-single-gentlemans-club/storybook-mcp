@@ -39,6 +39,12 @@ A **Model Context Protocol (MCP) server** for Storybook story generation, compon
 
 ---
 
+## Related repos
+
+ForgeKit and Nx packages that pair with this MCP are summarized in [docs/package-lineage.mdx](./docs/package-lineage.mdx) (Mintlify: [Package lineage](/package-lineage)) and the monorepo-wide [package lineage](https://github.com/effinrich/forgekit/blob/main/docs/package-lineage.md) if you use [`effinrich/forgekit`](https://github.com/effinrich/forgekit).
+
+---
+
 ## Table of Contents
 
 - [Quick Start](#quick-start)

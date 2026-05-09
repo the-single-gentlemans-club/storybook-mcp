@@ -45,6 +45,7 @@ export interface SetupResult {
   isNextjs: boolean
   nxLibName?: string
   filesCreated: string[]
+  filesRenamed: string[]
   scriptsAdded: string[]
   dependencies: {
     dev: string[]
@@ -698,6 +699,7 @@ export async function runSetup(
     isNextjs,
     nxLibName,
     filesCreated: [],
+    filesRenamed: [],
     scriptsAdded: [],
     dependencies: getDependencies(config)
   }
@@ -793,14 +795,52 @@ export async function runSetup(
     )
   }
 
-  // preview.tsx
+  // preview.tsx — also handle legacy preview.ts / preview.js so we never
+  // leave duplicates behind. preflight prefers preview.ts over preview.tsx,
+  // so a stale .ts would silently shadow freshly written .tsx content.
   const previewPath = path.join(storybookDir, 'preview.tsx')
+  const legacyPreviewTs = path.join(storybookDir, 'preview.ts')
+  const legacyPreviewJs = path.join(storybookDir, 'preview.js')
   const previewExists = fs.existsSync(previewPath)
-  if (!previewExists || force) {
-    if (!dryRun) fs.writeFileSync(previewPath, generatePreviewTs(config))
+  const legacyTsExists = fs.existsSync(legacyPreviewTs)
+  const legacyJsExists = fs.existsSync(legacyPreviewJs)
+  const anyPreviewExists = previewExists || legacyTsExists || legacyJsExists
+
+  if (!anyPreviewExists || force) {
+    if (!dryRun) {
+      if (legacyTsExists) {
+        const backupPath = path.join(storybookDir, 'preview.ts.bak')
+        fs.renameSync(legacyPreviewTs, backupPath)
+        result.filesRenamed.push(
+          '.storybook/preview.ts → .storybook/preview.ts.bak'
+        )
+        console.log(
+          `  📦 Renamed legacy .storybook/preview.ts → preview.ts.bak`
+        )
+      }
+      if (legacyJsExists) {
+        const backupPath = path.join(storybookDir, 'preview.js.bak')
+        fs.renameSync(legacyPreviewJs, backupPath)
+        result.filesRenamed.push(
+          '.storybook/preview.js → .storybook/preview.js.bak'
+        )
+        console.log(
+          `  📦 Renamed legacy .storybook/preview.js → preview.js.bak`
+        )
+      }
+      fs.writeFileSync(previewPath, generatePreviewTs(config))
+    }
     result.filesCreated.push('.storybook/preview.tsx')
     console.log(
       `  📄 ${previewExists ? 'Overwrote' : 'Created'} .storybook/preview.tsx`
+    )
+  } else if (legacyTsExists || legacyJsExists) {
+    const legacy = legacyTsExists ? 'preview.ts' : 'preview.js'
+    console.log(
+      `  ⚠️  Found legacy .storybook/${legacy} — Storybook would load it instead of preview.tsx`
+    )
+    console.log(
+      `      Re-run with --force to back it up to ${legacy}.bak and write a fresh preview.tsx`
     )
   } else {
     console.log(
